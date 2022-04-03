@@ -1,4 +1,4 @@
-orig_db_config = YAML.load_file("config/database.yml")
+orig_db_config = YAML.load_file("config/database.yml", aliases: true)
 db_prefix = File.basename(orig_db_config["development"]["database"], "_development")
 
 run "rm config/database.yml"
