@@ -1,0 +1,51 @@
+# Docker Compose Override for Local Development
+#
+# This file is for local development with Docker (includes dev/test gems).
+# Copy this file to compose.local.yaml and customize as needed.
+#
+# Usage:
+#   docker compose -f compose.yaml -f compose.local.yaml up
+#
+# DO NOT commit compose.local.yaml to git (already in .gitignore)
+
+services:
+  web:
+    build:
+      args:
+        # Install ALL gems including development and test groups
+        BUNDLE_WITHOUT: ""
+    environment:
+      # Development environment
+      - RAILS_ENV=development
+      # Disable frozen string literals in development for easier debugging
+      - RUBYOPT=
+      # Lower thread count for development
+      - RAILS_MAX_THREADS=5
+      - RAILS_MIN_THREADS=5
+      # Single worker for faster code reload
+      - WEB_CONCURRENCY=0
+    volumes:
+      # Live code reload (mount source code into container)
+      - .:/app
+    # Override command for development (optional)
+    # command: bundle exec rails server -b 0.0.0.0
+    # Or run tests:
+    # command: bundle exec rspec
+
+  # Expose PostgreSQL port for debugging (optional)
+  pg:
+    ports:
+      - "5432:5432"
+
+  # Expose Redis ports for debugging (optional)
+  redis_cache:
+    ports:
+      - "6379:6379"
+
+  redis_cable:
+    ports:
+      - "6380:6379"
+
+  redis_session:
+    ports:
+      - "6381:6379"

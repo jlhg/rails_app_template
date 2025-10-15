@@ -1,0 +1,53 @@
+# Ruby version files
+.ruby-version
+.ruby-gemset
+
+# Git
+.git
+.gitignore
+
+# Docker files (not needed in image)
+.dockerignore
+Dockerfile
+Dockerfile.*
+compose.yaml
+compose.yml
+compose.*.yaml
+compose.*.yml
+docker-compose.yaml
+docker-compose.yml
+docker-compose.*.yaml
+docker-compose.*.yml
+
+# Editor temp files
+\#*\#
+*~
+TAGS
+
+# Development files
+.byebug_history
+.pry_history
+
+# Logs and temp files
+/tmp/
+/log/
+
+# Test files
+/test/
+/spec/
+
+# Coverage reports
+/coverage/
+
+# Docker development files
+/docker/
+.srv/
+.secrets/
+
+# Credentials
+/config/master.key
+
+# Editor directories
+.vscode
+.idea
+.DS_Store

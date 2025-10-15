@@ -1,101 +1,182 @@
 # A Ruby static code analyzer and formatter, based on the community
 # Ruby style guide. https://docs.rubocop.org
 gem "rubocop", require: false
-file ".rubocop.yml", <<-CODE
-AllCops:
-  Exclude:
-    - bin/*
-    - db/migrate/*.rb
-    - db/schema.rb
-    - Gemfile
-    - config.ru
-    - Rakefile
+file ".rubocop.yml", <<~CODE
+  AllCops:
+    NewCops: enable
+    Exclude:
+      - bin/*
+      - db/migrate/*.rb
+      - db/schema.rb
+      - Gemfile
+      - config.ru
+      - Rakefile
 
-Documentation:
-  Enabled: false
+  Layout/FirstArgumentIndentation:
+    EnforcedStyle: special_for_inner_method_call_in_parentheses
 
-Metrics/CyclomaticComplexity:
-  Enabled: false
+  Layout/FirstHashElementIndentation:
+    EnforcedStyle: special_inside_parentheses
 
-Metrics/LineLength:
-  Enabled: false
+  Layout/HashAlignment:
+    Enabled: true
+    EnforcedHashRocketStyle: table
+    EnforcedColonStyle: table
 
-Metrics/MethodLength:
-  Enabled: false
+  Layout/MultilineMethodCallIndentation:
+    EnforcedStyle: indented_relative_to_receiver
 
-Metrics/ModuleLength:
-  Enabled: false
+  Layout/LineLength:
+    Enabled: false
 
-Metrics/ClassLength:
-  Enabled: false
+  Lint/ConstantDefinitionInBlock:
+    Enabled: false
 
-Metrics/AbcSize:
-  Enabled: false
+  Lint/DuplicateBranch:
+    Enabled: false
 
-Metrics/PerceivedComplexity:
-  Enabled: false
+  Lint/EmptyBlock:
+    Enabled: false
 
-Metrics/BlockLength:
-  Enabled: false
+  Lint/RaiseException:
+    Enabled: true
 
-Metrics/BlockNesting:
-  Enabled: false
+  Lint/StructNewOverride:
+    Enabled: true
 
-Style/FrozenStringLiteralComment:
-  Enabled: false
+  Lint/RescueException:
+    Enabled: false
 
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
-  ConsistentQuotesInMultiline: true
+  Metrics/AbcSize:
+    Enabled: false
 
-Style/RedundantReturn:
-  Enabled: false
+  Metrics/BlockLength:
+    Enabled: false
 
-Style/GuardClause:
-  Enabled: false
+  Metrics/BlockNesting:
+    Enabled: false
 
-Style/WordArray:
-  EnforcedStyle: brackets
+  Metrics/ClassLength:
+    Enabled: false
 
-Style/SymbolArray:
-  EnforcedStyle: brackets
+  Metrics/CyclomaticComplexity:
+    Enabled: false
 
-Style/ClassAndModuleChildren:
-  Enabled: false
+  Metrics/MethodLength:
+    Enabled: false
 
-Style/ConditionalAssignment:
-  EnforcedStyle: assign_inside_condition
-  IncludeTernaryExpressions: false
+  Metrics/ModuleLength:
+    Enabled: false
 
-Style/NumericPredicate:
-  Enabled: false
+  Metrics/ParameterLists:
+    Enabled: false
 
-Style/IfUnlessModifier:
-  Enabled: false
+  Metrics/PerceivedComplexity:
+    Enabled: false
 
-Style/HashEachMethods:
-  Enabled: false
+  Naming/AccessorMethodName:
+    Enabled: false
 
-Style/HashTransformKeys:
-  Enabled: false
+  Naming/MethodParameterName:
+    AllowNamesEndingInNumbers: true
+    MinNameLength: 1
 
-Style/HashTransformValues:
-  Enabled: false
+  Naming/PredicatePrefix:
+    Enabled: false
 
-Style/NegatedIf:
-  Enabled: false
+  Naming/VariableNumber:
+    Enabled: false
 
-Layout/HashAlignment:
-  EnforcedHashRocketStyle: table
-  Enabled: true
+  Style/AsciiComments:
+    Enabled: false
 
-Lint/RaiseException:
-  Enabled: true
+  Style/ClassAndModuleChildren:
+    Enabled: false
 
-Lint/StructNewOverride:
-  Enabled: true
+  Style/CombinableLoops:
+    Enabled: false
 
-Naming/MethodParameterName:
-  MinNameLength: 1
-  AllowNamesEndingInNumbers: true
+  Style/ConditionalAssignment:
+    EnforcedStyle: assign_inside_condition
+    IncludeTernaryExpressions: false
+
+  Style/Documentation:
+    Enabled: false
+
+  Style/EmptyMethod:
+    EnforcedStyle: expanded
+
+  Style/FrozenStringLiteralComment:
+    Enabled: false
+
+  Style/GuardClause:
+    Enabled: false
+
+  Style/HashEachMethods:
+    Enabled: false
+
+  Style/HashLikeCase:
+    Enabled: false
+
+  Style/HashSyntax:
+    EnforcedShorthandSyntax: never
+
+  Style/HashTransformKeys:
+    Enabled: false
+
+  Style/HashTransformValues:
+    Enabled: false
+
+  Style/IfInsideElse:
+    Enabled: false
+
+  Style/IfUnlessModifier:
+    Enabled: false
+
+  Style/MinMaxComparison:
+    Enabled: false
+
+  Style/NegatedIf:
+    Enabled: false
+
+  Style/Next:
+    Enabled: false
+
+  Style/NumericLiterals:
+    Enabled: false
+
+  Style/NumericPredicate:
+    Enabled: false
+
+  Style/RedundantReturn:
+    Enabled: false
+
+  Style/RegexpLiteral:
+    EnforcedStyle: slashes
+    AllowInnerSlashes: true
+
+  Style/RescueStandardError:
+    Enabled: false
+
+  Style/SoleNestedConditional:
+    Enabled: false
+
+  Style/StringConcatenation:
+    Enabled: false
+
+  Style/StringLiterals:
+    ConsistentQuotesInMultiline: true
+    EnforcedStyle: double_quotes
+
+  Style/SymbolArray:
+    EnforcedStyle: brackets
+
+  Style/WordArray:
+    EnforcedStyle: brackets
+
+  Style/YodaCondition:
+    Enabled: false
+
+  Style/ZeroLengthPredicate:
+    Enabled: false
 CODE

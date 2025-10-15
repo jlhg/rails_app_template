@@ -1,0 +1,185 @@
+# Cloudflare Tunnel Configuration
+# Copy this file to cloudflared-config.yaml and configure with your tunnel details
+#
+# IMPORTANT: This file should be committed (contains no secrets)
+# The actual credentials are stored in .secrets/cf_tunnel_token
+
+# ============================================================================
+# Tunnel Configuration
+# ============================================================================
+
+# Your Cloudflare Tunnel ID (get from: cloudflare.com/zero-trust/tunnels)
+# Example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+tunnel: YOUR_TUNNEL_ID_HERE
+
+# Tunnel credentials file path (inside container)
+# This is mounted from .secrets/cf_tunnel_token via Docker secrets
+credentials-file: /run/secrets/cf_tunnel_token
+
+# Metrics endpoint for health checks
+# Used by Docker healthcheck to verify cloudflared is running
+metrics: 0.0.0.0:41111
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+
+# Log level: trace, debug, info, warn, error, fatal
+loglevel: info
+
+# ============================================================================
+# Ingress Rules (Order matters - first match wins)
+# ============================================================================
+
+ingress:
+  # ---------------------------------------------------------------------------
+  # WebSocket Route (ActionCable) - MUST be before general HTTP route
+  # ---------------------------------------------------------------------------
+  # This handles WebSocket connections for real-time features
+  - hostname: api.yourdomain.com
+    path: /cable
+    service: http://web:3000
+    originRequest:
+      # Disable TLS verification (backend uses http, not https)
+      noTLSVerify: true
+
+      # CRITICAL: Force HTTP/1.1 (WebSocket requires HTTP/1.1, not HTTP/2)
+      http2Origin: false
+
+      # Connection timeouts
+      connectTimeout: 30s        # Time to establish connection
+      tlsTimeout: 10s            # TLS handshake timeout (not used with http)
+
+      # Keep-alive settings for long-lived WebSocket connections
+      tcpKeepAlive: 30s          # Send TCP keepalive every 30s
+      keepAliveTimeout: 90s      # Idle connection timeout (90s > Cloudflare free 100s limit)
+      keepAliveConnections: 100  # Max idle connections to origin
+
+      # Disable HTTP/2 origin (WebSocket needs HTTP/1.1)
+      disableChunkedEncoding: false
+
+  # ---------------------------------------------------------------------------
+  # General HTTP/API Routes
+  # ---------------------------------------------------------------------------
+  # All other requests (REST API, health checks, etc.)
+  - hostname: api.yourdomain.com
+    service: http://web:3000
+    originRequest:
+      noTLSVerify: true
+      # Can use HTTP/2 for regular API requests (better performance)
+      http2Origin: true
+      connectTimeout: 10s
+      tcpKeepAlive: 30s
+      keepAliveTimeout: 30s
+
+  # ---------------------------------------------------------------------------
+  # Catch-all Rule (Required by Cloudflare Tunnel)
+  # ---------------------------------------------------------------------------
+  # This must be the last rule - returns 404 for unmatched requests
+  - service: http_status:404
+
+# ============================================================================
+# Configuration Notes
+# ============================================================================
+
+# 1. Tunnel ID Setup:
+#    - Go to: https://one.dash.cloudflare.com/
+#    - Navigate to: Access → Tunnels
+#    - Create a new tunnel or use existing one
+#    - Copy the Tunnel ID (UUID format)
+#    - Replace YOUR_TUNNEL_ID_HERE above
+
+# 2. Credentials File:
+#    - When you create a tunnel, Cloudflare generates a credentials JSON
+#    - Save this JSON to: .secrets/cf_tunnel_token
+#    - The file is automatically mounted to /run/secrets/cf_tunnel_token
+
+# 3. Hostname Configuration:
+#    - Replace api.yourdomain.com with your actual domain
+#    - Domain must be added to Cloudflare and point to the tunnel
+#    - You can use multiple hostnames (add more ingress rules)
+
+# 4. WebSocket Limitations by Cloudflare Plan:
+#    - Free:       100 seconds timeout
+#    - Pro:        600 seconds timeout (10 minutes)
+#    - Business:   600 seconds timeout
+#    - Enterprise: No timeout limit
+#
+#    For Free plan: Implement auto-reconnect in frontend
+#    ActionCable.js has built-in reconnection logic
+
+# 5. Scaling for High Concurrency:
+#    - Single cloudflared instance: ~1,000 concurrent WebSocket connections
+#    - For more: Run multiple cloudflared replicas (same tunnel, load balanced)
+#    - Example in compose.yaml:
+#      cloudflared:
+#        deploy:
+#          replicas: 3
+
+# 6. Testing:
+#    # Check tunnel status
+#    docker compose logs cloudflared
+#
+#    # Test WebSocket connection (browser console)
+#    const ws = new WebSocket('wss://api.yourdomain.com/cable');
+#    ws.onopen = () => console.log('Connected');
+#    ws.onclose = () => console.log('Disconnected');
+
+# 7. Multiple Environments:
+#    # Development
+#    - hostname: api-dev.yourdomain.com
+#
+#    # Staging
+#    - hostname: api-staging.yourdomain.com
+#
+#    # Production
+#    - hostname: api.yourdomain.com
+
+# ============================================================================
+# Security Best Practices
+# ============================================================================
+
+# ✅ DO:
+# - Use this config file (committed, no secrets)
+# - Store tunnel credentials in .secrets/cf_tunnel_token (gitignored)
+# - Set proper hostname restrictions
+# - Enable Cloudflare Access policies for additional protection
+# - Monitor tunnel metrics at metrics:41111/metrics
+
+# ❌ DON'T:
+# - Don't put credentials in this file (use credentials-file)
+# - Don't use catch-all hostname (* or missing hostname)
+# - Don't disable noTLSVerify in production if using https backend
+# - Don't commit cf_tunnel_token to git (already in .gitignore)
+
+# ============================================================================
+# Example: Multiple Hostnames
+# ============================================================================
+
+# ingress:
+#   # WebSocket for main API
+#   - hostname: api.yourdomain.com
+#     path: /cable
+#     service: http://web:3000
+#     originRequest:
+#       http2Origin: false
+#       keepAliveTimeout: 90s
+#
+#   # WebSocket for admin panel
+#   - hostname: admin.yourdomain.com
+#     path: /cable
+#     service: http://web:3000
+#     originRequest:
+#       http2Origin: false
+#       keepAliveTimeout: 90s
+#
+#   # API requests
+#   - hostname: api.yourdomain.com
+#     service: http://web:3000
+#
+#   # Admin requests
+#   - hostname: admin.yourdomain.com
+#     service: http://web:3000
+#
+#   # Catch-all
+#   - service: http_status:404

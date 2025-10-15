@@ -1,0 +1,5 @@
+# GitLab Personal Access Token (optional)
+# Required only if your Gemfile references private GitLab repositories
+# Create at: https://gitlab.com/-/user_settings/personal_access_tokens
+# Required scopes: read_api, read_repository
+glpat-xxxxxxxxxxxxxxxxxxxx

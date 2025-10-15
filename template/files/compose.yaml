@@ -1,0 +1,293 @@
+# Docker Compose Configuration for Rails Production Deployment
+#
+# IMPORTANT: This configuration is designed for production-like environments (production/staging).
+#
+# The Docker image built from Dockerfile:
+# - Installs only production gems (BUNDLE_WITHOUT=development:test)
+# - Optimized for production use (RAILS_ENV=production by default)
+# - Enables YJIT for better performance
+#
+# Supported environments:
+# ✅ production  - Full production deployment
+# ✅ staging     - Staging environment (uses same production gems)
+# ✅ demo        - Demo/preview environments
+#
+# NOT suitable for:
+# ❌ development - Missing development gems (pry, spring, etc.)
+# ❌ test        - Missing test gems (rspec, factory_bot, etc.)
+#
+# For local development, use compose.local.yaml with volume mounts:
+#   services:
+#     web:
+#       build:
+#         args:
+#           BUNDLE_WITHOUT: ""  # Install all gems including dev/test
+#       environment:
+#         - RAILS_ENV=development
+#       volumes:
+#         - .:/app  # Live code reload
+#
+# Override defaults using:
+# 1. .env file (for common overrides)
+# 2. compose.override.yaml (auto-loaded, for personal settings)
+# 3. compose.local.yaml or compose.staging.yaml (use with: docker compose -f compose.yaml -f compose.staging.yaml up)
+#
+name: "rails_app"
+
+# Shared healthcheck configuration
+x-healthcheck-default: &healthcheck-default
+  interval: 30s
+  timeout: 10s
+  retries: 10
+  start_period: 10s
+
+# Shared web service configuration
+x-web-common: &web-common
+  build:
+    context: .
+    args:
+      # Set custom GitLab host if using self-hosted GitLab
+      # Default: gitlab.com
+      GITLAB_HOST: ${GITLAB_HOST:-gitlab.com}
+    secrets:
+      - github_pat
+      - gitlab_pat
+  restart: unless-stopped
+  volumes:
+    - .:/app
+    - ./.srv/web/log:/app/log
+  depends_on:
+    pg:
+      condition: service_healthy
+    redis_cache:
+      condition: service_healthy
+    redis_cable:
+      condition: service_healthy
+    redis_session:
+      condition: service_healthy
+  environment:
+    - RAILS_ENV=${RAILS_ENV:-production}
+    - RUBY_YJIT_ENABLE=${RUBY_YJIT_ENABLE:-1}
+    - RUBYOPT=${RUBYOPT:---enable-frozen-string-literal}
+    # Puma web server configuration
+    - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
+    - RAILS_MAX_THREADS=${RAILS_MAX_THREADS:-16}
+    - RAILS_MIN_THREADS=${RAILS_MIN_THREADS:-16}
+    - PUMA_WORKER_TIMEOUT=${PUMA_WORKER_TIMEOUT:-30}
+    # Database configuration (alternative to DATABASE_URL)
+    - DATABASE_HOST=${DATABASE_HOST:-pg}
+    - DATABASE_PORT=${DATABASE_PORT:-5432}
+    - DATABASE_NAME=${DATABASE_NAME:-app_production}
+    - DATABASE_USER=${DATABASE_USER:-postgres}
+    - DATABASE_PASSWORD_FILE=${DATABASE_PASSWORD_FILE:-/run/secrets/database_password}
+    # Redis Cache (Rails.cache, rate limiting)
+    - REDIS_CACHE_HOST=${REDIS_CACHE_HOST:-redis_cache}
+    - REDIS_CACHE_PORT=${REDIS_CACHE_PORT:-6379}
+    - REDIS_CACHE_PASSWORD_FILE=${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
+    # Redis Cable (ActionCable WebSocket pub/sub)
+    - REDIS_CABLE_HOST=${REDIS_CABLE_HOST:-redis_cable}
+    - REDIS_CABLE_PORT=${REDIS_CABLE_PORT:-6379}
+    - REDIS_CABLE_PASSWORD_FILE=${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
+    # Redis Session (Access tokens, user sessions)
+    - REDIS_SESSION_HOST=${REDIS_SESSION_HOST:-redis_session}
+    - REDIS_SESSION_PORT=${REDIS_SESSION_PORT:-6379}
+    - REDIS_SESSION_PASSWORD_FILE=${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
+    # ActionCable WebSocket configuration
+    - ACTION_CABLE_URL=${ACTION_CABLE_URL:-ws://localhost:3000/cable}
+    - ACTION_CABLE_ALLOWED_ORIGINS=${ACTION_CABLE_ALLOWED_ORIGINS:-*}
+    - ACTION_CABLE_DISABLE_FORGERY_PROTECTION=${ACTION_CABLE_DISABLE_FORGERY_PROTECTION:-true}
+    # Rails secret key
+    - SECRET_KEY_BASE_FILE=${SECRET_KEY_BASE_FILE:-/run/secrets/rails_secret_key_base}
+    # Action Mailer SMTP configuration
+    - MAILER_SMTP_PASSWORD_FILE=${MAILER_SMTP_PASSWORD_FILE:-/run/secrets/mailer_smtp_password}
+    # Database preparation (set to true only when needed: first deploy, migrations, schema changes)
+    - RAILS_DB_PREPARE=${RAILS_DB_PREPARE:-false}
+  secrets:
+    - database_password
+    - redis_cache_password
+    - redis_cable_password
+    - redis_session_password
+    - rails_secret_key_base
+    - mailer_smtp_password
+
+services:
+  # PostgreSQL Database
+  pg:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck-default
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
+    volumes:
+      - ./.srv/pg:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-postgres}
+      - POSTGRES_PASSWORD_FILE=${DATABASE_PASSWORD_FILE:-/run/secrets/database_password}
+      - POSTGRES_DB=${DATABASE_NAME:-app_production}
+    secrets:
+      - database_password
+    expose:
+      - 5432
+
+  # Valkey Cache (Rails.cache, rate limiting)
+  # Valkey is 100% compatible with Redis, fully open source (BSD-3)
+  # Policy: allkeys-lru (can evict old data)
+  # Persistence: No (cache can be rebuilt)
+  redis_cache:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: >
+      sh -c '
+        REDIS_PASS_FILE=$${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
+        redis-server
+        --requirepass "$$(cat $$REDIS_PASS_FILE)"
+        --maxmemory 1gb
+        --maxmemory-policy allkeys-lru
+        --save ""
+      '
+    healthcheck:
+      <<: *healthcheck-default
+      test:
+        - CMD
+        - sh
+        - -c
+        - |
+          REDIS_PASS_FILE=$${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
+          redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+    environment:
+      - REDIS_CACHE_PASSWORD_FILE=${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
+    secrets:
+      - redis_cache_password
+    expose:
+      - 6379
+
+  # Valkey Cable (ActionCable WebSocket pub/sub)
+  # Valkey is 100% compatible with Redis, fully open source (BSD-3)
+  # Policy: noeviction (pub/sub cannot be evicted)
+  # Persistence: No (real-time data, no need to persist)
+  redis_cable:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: >
+      sh -c '
+        REDIS_PASS_FILE=$${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
+        redis-server
+        --requirepass "$$(cat $$REDIS_PASS_FILE)"
+        --maxmemory 512mb
+        --maxmemory-policy noeviction
+        --save ""
+      '
+    healthcheck:
+      <<: *healthcheck-default
+      test:
+        - CMD
+        - sh
+        - -c
+        - |
+          REDIS_PASS_FILE=$${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
+          redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+    environment:
+      - REDIS_CABLE_PASSWORD_FILE=${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
+    secrets:
+      - redis_cable_password
+    expose:
+      - 6379
+
+  # Valkey Session (Access tokens, user sessions, important state)
+  # Valkey is 100% compatible with Redis, fully open source (BSD-3)
+  # Policy: noeviction (cannot evict important data)
+  # Persistence: Yes (AOF for durability)
+  redis_session:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: >
+      sh -c '
+        REDIS_PASS_FILE=$${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
+        redis-server
+        --requirepass "$$(cat $$REDIS_PASS_FILE)"
+        --maxmemory 512mb
+        --maxmemory-policy noeviction
+        --appendonly yes
+        --appendfsync everysec
+      '
+    healthcheck:
+      <<: *healthcheck-default
+      test:
+        - CMD
+        - sh
+        - -c
+        - |
+          REDIS_PASS_FILE=$${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
+          redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+    volumes:
+      - ./.srv/redis_session:/data
+    environment:
+      - REDIS_SESSION_PASSWORD_FILE=${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
+    secrets:
+      - redis_session_password
+    expose:
+      - 6379
+
+  # Rails Web Service
+  web:
+    <<: *web-common
+    healthcheck:
+      <<: *healthcheck-default
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:3000/up']
+    # Graceful shutdown configuration
+    # When stopping the container, Docker sends SIGTERM to Puma
+    # Puma will: (1) Stop accepting new requests, (2) Wait for existing requests to complete, (3) Shutdown
+    stop_signal: SIGTERM       # Signal to send (SIGTERM is default, explicit for clarity)
+    stop_grace_period: 60s     # Wait up to 60s for graceful shutdown before sending SIGKILL
+                               # Should be > PUMA_WORKER_TIMEOUT (default 30s) to allow requests to complete
+    # Command is handled by docker-entrypoint.sh + Dockerfile CMD
+    # Override if needed: command: bundle exec rails console
+    ports:
+      - "3000:3000"
+
+  # Cloudflare Tunnel (optional - for secure remote access with WebSocket support)
+  # Copy cloudflared-config.yaml.example to cloudflared-config.yaml and configure
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: no
+    command: tunnel --config /etc/cloudflared/config.yaml run
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      # Mount config file (contains tunnel ID and ingress rules, no secrets)
+      - ./cloudflared-config.yaml:/etc/cloudflared/config.yaml:ro
+    secrets:
+      # Tunnel credentials (actual secret, stored in .secrets/)
+      - cf_tunnel_token
+    healthcheck:
+      # Check metrics endpoint (configured in cloudflared-config.yaml)
+      test: ['CMD-SHELL', 'wget -q --spider http://localhost:41111/ready || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - cloudflare
+
+# Docker secrets (all sensitive data stored in .secrets/ directory)
+# If you need different paths, edit this file directly or use a custom compose file
+secrets:
+  database_password:
+    file: ./.secrets/database_password
+  redis_cache_password:
+    file: ./.secrets/redis_cache_password
+  redis_cable_password:
+    file: ./.secrets/redis_cable_password
+  redis_session_password:
+    file: ./.secrets/redis_session_password
+  rails_secret_key_base:
+    file: ./.secrets/rails_secret_key_base
+  mailer_smtp_password:
+    file: ./.secrets/mailer_smtp_password
+  cf_tunnel_token:
+    file: ./.secrets/cf_tunnel_token
+  github_pat:
+    file: ./.secrets/github_pat
+  gitlab_pat:
+    file: ./.secrets/gitlab_pat

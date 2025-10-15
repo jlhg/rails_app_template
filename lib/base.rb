@@ -34,5 +34,5 @@ def update_yaml(file_path, data)
     node.quoted = false
     node.style  = Psych::Nodes::Scalar::ANY
   end
-  File.open(file_path, "w") { |f| f.write(ast.yaml) }
+  File.write(file_path, ast.yaml)
 end
