@@ -1,11 +1,7 @@
 # Ruby/Bundler
-*.gem
-*.rbc
 .bundle
 .bundle/
 vendor/bundle/
-.ruby-version.local
-.ruby-gemset.local
 
 # Logs and temporary files
 log/
@@ -21,28 +17,18 @@ storage/
 !.vscode/extensions.json
 .idea/
 .DS_Store
-*.swp
-*.swo
+*.sw?
 *~
 \#*\#
-.project
-.settings/
-TAGS
 
 # Debugging history
-.byebug_history
 .pry_history
 
 # Test coverage
 coverage/
-coverage.data
 
 # RuboCop
 .rubocop-*
-
-# YARD documentation
-.yardoc/
-doc/api/
 
 # Cache directories
 .cache/
