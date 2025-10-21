@@ -1,0 +1,58 @@
+# Ruby/Bundler
+*.gem
+*.rbc
+.bundle
+.bundle/
+vendor/bundle/
+.ruby-version.local
+.ruby-gemset.local
+
+# Logs and temporary files
+log/
+tmp/
+*.log
+
+# Rails runtime data
+storage/
+!storage/.keep
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+\#*\#
+.project
+.settings/
+TAGS
+
+# Debugging history
+.byebug_history
+.pry_history
+
+# Test coverage
+coverage/
+coverage.data
+
+# RuboCop
+.rubocop-*
+
+# YARD documentation
+.yardoc/
+doc/api/
+
+# Cache directories
+.cache/
+
+# Environment files (may contain sensitive data)
+.env
+.env*.local
+
+# Claude Code (local settings and logs)
+.claude/settings.local.json
+.claude/logs/
+.claude/*.log
+.claude/cache/

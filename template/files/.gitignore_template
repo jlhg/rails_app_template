@@ -35,11 +35,13 @@ config/gcloud.json
 !.vscode/extensions.json
 .idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
+*.swp
+*.swo
+*~
+\#*\#
+.project
+.settings/
 
 # Docker Compose - Personal overrides (not committed)
 compose.override.yaml
@@ -71,4 +73,26 @@ cloudflared-config.yaml
 !.secrets/*.example
 
 # IRB history
-/.irbrc
+.irb_history
+
+# Test coverage and reports
+/coverage/
+/coverage.data
+*.rbc
+
+# RuboCop cache
+.rubocop-*
+
+# YARD documentation
+.yardoc/
+doc/api/
+
+# Cache directories
+.cache/
+tmp/cache/
+
+# Claude Code (local settings and logs)
+.claude/settings.local.json
+.claude/logs/
+.claude/*.log
+.claude/cache/

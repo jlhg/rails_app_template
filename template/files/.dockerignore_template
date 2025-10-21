@@ -28,6 +28,10 @@ TAGS
 .byebug_history
 .pry_history
 
+# Environment files (local overrides)
+.env.local
+.env.*.local
+
 # Logs and temp files
 /tmp/
 /log/
@@ -47,7 +51,32 @@ TAGS
 # Credentials
 /config/master.key
 
-# Editor directories
+# Editor directories and files
 .vscode
 .idea
 .DS_Store
+*.swp
+*.swo
+*~
+
+# Claude Code (development guide, not needed in production)
+.claude/
+CLAUDE.md
+
+# Development tools configuration
+.rubocop.yml
+.rubocop_todo.yml
+.rspec
+.yardopts
+.yardoc/
+
+# Node.js (if using for assets)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Local uploads (development)
+public/uploads/
+
+# Bundler (if using --deployment, vendor/bundle is rebuilt in image)
+vendor/bundle/
