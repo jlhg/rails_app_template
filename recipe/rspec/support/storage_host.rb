@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # ActiveStorage testing configuration
 # Sets up default host for URL generation and cleans up test files
 RSpec.configure do |config|

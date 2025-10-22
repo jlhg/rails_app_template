@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require "rspec/expectations"
 
 # Custom RSpec matchers for API request specs

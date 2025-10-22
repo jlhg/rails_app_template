@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # RSpec Request Spec Helpers for API Testing
 # Follows 2025 best practices: avoid instance variables, use explicit headers
 # Reference: https://www.betterspecs.org/
