@@ -88,6 +88,7 @@ bundle exec rake db:migrate db:test:prepare
 - **Updated RuboCop**: Fixed deprecated cop names for modern Ruby standards
 - **YJIT Enabled**: Ruby 3.4 YJIT provides 15-30% performance improvement
 - **Frozen String Literals**: Memory optimization with `--enable-frozen-string-literal`
+- **UUIDv7 Primary Keys**: PostgreSQL 18 native UUIDv7 for secure, time-ordered IDs with bigint-level performance (see [docs/ID_STRATEGY.md](docs/ID_STRATEGY.md))
 
 ## Testing Enhancements
 
@@ -799,6 +800,82 @@ REDIS_SESSION.with { |r| r.setex("token:#{token}", 24.hours.to_i, user_id) }
 
 **For detailed architecture explanation, troubleshooting, and scaling guides:**
 📖 **[docs/REDIS_ARCHITECTURE.md](docs/REDIS_ARCHITECTURE.md)**
+
+## Resource ID Strategy
+
+This template uses **UUIDv7** as the default primary key type for all database tables, leveraging PostgreSQL 18's native support.
+
+### Why UUIDv7 Over Auto-Incrementing IDs?
+
+**Business Intelligence Leakage Risk:**
+
+```ruby
+# ❌ Problem: Sequential integer IDs expose business data
+GET /api/orders/12345  # → Reveals: "~12,345 total orders"
+
+# One week later
+GET /api/orders/12850  # → Reveals: "~500 orders/week growth"
+```
+
+**Competitors can:**
+- 📊 Estimate your business scale
+- 📈 Track your growth/decline rate
+- 🔍 Perform enumeration attacks
+
+### UUIDv7: Security + Performance
+
+**Performance comparison (1M row insert):**
+```
+┌──────────┬──────────┬────────────────┐
+│ Type     │ Time     │ Relative       │
+├──────────┼──────────┼────────────────┤
+│ bigint   │ 290 sec  │ 100% (baseline)│
+│ UUIDv7   │ 290 sec  │ 100% ✅ SAME!  │
+│ UUIDv4   │ 375 sec  │ 77% (slower)   │
+└──────────┴──────────┴────────────────┘
+```
+
+**UUIDv7 = bigint performance + security**
+
+### Implementation
+
+All models automatically use UUIDs:
+
+```ruby
+# rails g model Order user:references status:string
+
+# Generated migration:
+create_table :orders, id: :uuid do |t|
+  t.references :user, type: :uuid, foreign_key: true
+  t.string :status
+  t.timestamps
+end
+
+# Model usage (no changes needed):
+order = Order.create(user: current_user, status: 'pending')
+order.id  # => "018f4d9e-5c4a-7000-9f8b-3a4c5d6e7f8a"
+```
+
+### Selective Opt-Out
+
+Use bigint for internal tables if needed:
+
+```ruby
+# Opt-out: Use bigint for join tables
+create_table :join_table, id: :bigint do |t|
+  t.references :order, type: :uuid
+  t.references :product, type: :uuid
+end
+```
+
+**For complete ID strategy guide including:**
+- UUIDv7 vs bigint vs ULID comparison
+- Performance benchmarks and analysis
+- Security best practices
+- Migration examples
+- When to use each ID type
+
+📖 **[docs/ID_STRATEGY.md](docs/ID_STRATEGY.md)**
 
 ## Authentication Architecture
 

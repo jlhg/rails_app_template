@@ -7,6 +7,7 @@ This is a **Rails 8 application template project** for quickly creating Rails AP
 **Key Features:**
 - ✅ Rails 8 + Ruby 3.4 optimizations (YJIT enabled)
 - ✅ API-only architecture (PostgreSQL 18, Valkey 8)
+- ✅ UUIDv7 primary keys (bigint-level performance, prevents business intel leakage)
 - ✅ Production-grade Docker configuration (multi-stage build, secrets management)
 - ✅ Structured logging (Lograge)
 - ✅ Complete test configuration (RSpec, FactoryBot, N+1 detection)
@@ -31,6 +32,7 @@ rails_app_template/
 ├── recipe/                 # Configuration recipes (modular configuration)
 │   ├── config.rb          # Main configuration coordinator
 │   ├── rspec.rb           # RSpec testing framework setup
+│   ├── uuidv7.rb          # UUIDv7 primary key configuration
 │   ├── action_storage.rb  # ActiveStorage configuration
 │   ├── action_cable.rb    # ActionCable configuration
 │   ├── database_yml.rb    # database.yml generator
@@ -303,6 +305,65 @@ init_gem "pagy"
 - `gem/<gem_name>.rb` - Gem description comments
 - `recipe/*.rb` - Recipe header comments
 - `template/files/docs/*.md` - Project documentation templates (if relevant)
+
+### Task 5: Working with UUIDv7 Primary Keys
+
+**Default behavior:** All new tables automatically use UUIDv7 as primary key.
+
+**Generated migration example:**
+```bash
+rails g model Order user:references status:string
+```
+
+```ruby
+# db/migrate/xxx_create_orders.rb (auto-generated)
+class CreateOrders < ActiveRecord::Migration[8.0]
+  def change
+    create_table :orders, id: :uuid do |t|
+      t.references :user, type: :uuid, foreign_key: true
+      t.string :status
+      t.timestamps
+    end
+  end
+end
+```
+
+**Model usage (no changes needed):**
+```ruby
+class Order < ApplicationRecord
+  belongs_to :user
+end
+
+# Works exactly like integer IDs:
+order = Order.create(user: current_user, status: 'pending')
+order.id  # => "018f4d9e-5c4a-7000-9f8b-3a4c5d6e7f8a"
+
+Order.find("018f4d9e-5c4a-7000-9f8b-3a4c5d6e7f8a")
+```
+
+**Selective opt-out (use bigint for specific tables):**
+```ruby
+# For internal tables or join tables where security doesn't matter
+create_table :active_storage_blobs, id: :bigint do |t|
+  # Internal table, not exposed via API
+end
+
+create_table :orders_products, id: :bigint do |t|
+  # Join table
+  t.references :order, type: :uuid, foreign_key: true
+  t.references :product, type: :uuid, foreign_key: true
+end
+```
+
+**Key benefits:**
+- ✅ Same performance as bigint (290s = 290s for 1M inserts)
+- ✅ Prevents business intelligence leakage (competitor can't see order count)
+- ✅ PostgreSQL 18 native support (no extra gems needed)
+- ✅ Time-ordered (excellent B-tree index locality)
+
+**Documentation:**
+- Full guide: `template/files/docs/ID_STRATEGY.md`
+- Configuration: `recipe/uuidv7.rb`
 
 ## Considerations and Common Pitfalls
 
