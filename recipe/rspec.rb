@@ -4,6 +4,9 @@ init_gem "factory_bot_rails"
 init_gem "mock_redis"
 init_gem "prosopite"
 
+# Override .rspec configuration to enable deprecation warnings
+copy_file File.join(files_path, ".rspec"), ".rspec", force: true
+
 start = 8
 lines = File.readlines("spec/rails_helper.rb")
 

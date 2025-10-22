@@ -1,0 +1,6 @@
+--require spec_helper
+--format documentation
+--color
+
+# Enable deprecation warnings (can be overridden with --no-warnings)
+--warnings

@@ -13,6 +13,10 @@ def recipe_path
   File.join(root_path, "recipe")
 end
 
+def files_path
+  File.join(root_path, "template", "files")
+end
+
 def eval_file_content(file_path)
   eval File.read(file_path)
 end

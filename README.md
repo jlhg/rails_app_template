@@ -96,6 +96,7 @@ bundle exec rake db:migrate db:test:prepare
 - **ActiveJob Helpers**: Built-in support for testing background jobs with `:inline_jobs` tag
 - **Seed Data Loading**: Automatic loading of `db/seeds.rb` in test suite
 - **Storage Host Mocking**: Pre-configured ActiveStorage URL generation for tests
+- **Deprecation Tracking**: Automatic detection and reporting of Ruby/Rails deprecation warnings during tests (see [docs/DEPRECATION_TRACKING.md](docs/DEPRECATION_TRACKING.md))
 
 ## Docker Deployment
 

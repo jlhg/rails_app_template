@@ -34,6 +34,9 @@ copy_file "files/.env.local.example", ".env.local.example"
 # Create .secrets directory for Docker secrets with proper permissions
 directory "files/.secrets", ".secrets"
 
+# Copy documentation files
+directory "files/docs", "docs"
+
 # Set secure permissions for .secrets directory
 # 700: Only owner can read/write/execute (prevents other users from listing)
 # This is required for Docker Compose to properly mount secrets
