@@ -477,7 +477,7 @@ end
 # 23. Wildcard Path Attacks - Special Handling
 # ----------------------------------------------------------------------------
 
-# Note: /* paths may be legitimate API wildcard requests
+# NOTE: /* paths may be legitimate API wildcard requests
 # Recommend handling at Cloudflare WAF level, or adjust based on actual needs
 
 # Rack::Attack.blocklist('block_wildcard_paths') do |req|

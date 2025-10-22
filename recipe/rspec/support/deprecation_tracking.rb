@@ -33,8 +33,8 @@ RSpec.configure do |config|
         if message.include?("deprecated") || message.include?("deprecation")
           Thread.current[:deprecation_warnings] ||= []
           Thread.current[:deprecation_warnings] << {
-            message: message,
-            location: caller(2..2).first,
+            message:   message,
+            location:  caller(2..2).first,
             timestamp: Time.now
           }
         end
@@ -47,10 +47,10 @@ RSpec.configure do |config|
       ActiveSupport::Deprecation.behavior = lambda do |message, callstack, _deprecation_horizon, _gem_name|
         Thread.current[:deprecation_warnings] ||= []
         Thread.current[:deprecation_warnings] << {
-          message: message,
-          location: callstack.first,
+          message:   message,
+          location:  callstack.first,
           timestamp: Time.now,
-          type: "Rails"
+          type:      "Rails"
         }
       end
     end
@@ -61,9 +61,10 @@ RSpec.configure do |config|
     $VERBOSE = @original_verbose
 
     # Collect all warnings from all threads
-    all_warnings = Thread.list.flat_map do |thread|
+    all_thread_warnings = Thread.list.flat_map do |thread|
       thread[:deprecation_warnings] || []
-    end.uniq { |w| [w[:message], w[:location]] }
+    end
+    all_warnings = all_thread_warnings.uniq { |w| [w[:message], w[:location]] }
 
     # Display warnings if any were found
     if all_warnings.any?
@@ -90,7 +91,7 @@ RSpec.configure do |config|
         end
       end
 
-      puts "\n" + "=" * 80
+      puts "\n" + ("=" * 80)
       puts "SUMMARY: #{all_warnings.count} deprecation warning(s) found"
       puts "=" * 80
       puts "\n"

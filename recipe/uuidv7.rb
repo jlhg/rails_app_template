@@ -55,7 +55,7 @@ initializer "uuidv7.rb", <<~RUBY
 RUBY
 
 # Add migration template for UUID tables with references
-file "lib/templates/active_record/migration/create_table_migration.rb", <<~'RUBY'
+file "lib/templates/active_record/migration/create_table_migration.rb", <<~RUBY
   class <%= migration_class_name %> < ActiveRecord::Migration[<%= ActiveRecord::Migration.current_version %>]
     def change
       create_table :<%= table_name %><%= primary_key_type %><%= ', default: -> { "uuidv7()" }' if options[:primary_key_type] == :uuid %> do |t|
@@ -94,7 +94,7 @@ file "lib/templates/active_record/migration/create_table_migration.rb", <<~'RUBY
   end
 RUBY
 
-# Note: Migration generator will automatically use UUID for new tables.
+# NOTE: Migration generator will automatically use UUID for new tables.
 # Example generated migration:
 #
 #   create_table :orders, id: :uuid, default: -> { "uuidv7()" } do |t|
