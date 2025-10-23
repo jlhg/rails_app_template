@@ -10,7 +10,8 @@ require_relative "../lib/base"
 remove_file ".gitignore"
 copy_file "files/.gitignore_template", ".gitignore"
 
-# Add RuboCop configuration
+# Replace Rails 8 default .rubocop.yml with custom configuration
+remove_file ".rubocop.yml"
 copy_file "files/.rubocop.yml", ".rubocop.yml"
 
 # Add .dockerignore for Docker deployments
