@@ -71,6 +71,7 @@ bundle exec rake db:migrate db:test:prepare
 ### Testing
 - **rspec-rails** - RSpec testing framework
 - **factory_bot_rails** - Test data factories
+- **faker** - Generate realistic fake data for tests (names, emails, etc.)
 - **shoulda-matchers** - RSpec matchers
 - **mock_redis** - Mock Redis for testing (fully compatible with redis-rb)
 - **prosopite** - N+1 query detection in tests (zero false positives)

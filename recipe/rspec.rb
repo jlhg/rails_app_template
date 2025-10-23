@@ -1,6 +1,7 @@
 init_gem "rspec-rails"
 init_gem "shoulda-matchers"
 init_gem "factory_bot_rails"
+init_gem "faker"
 init_gem "mock_redis"
 init_gem "prosopite"
 
