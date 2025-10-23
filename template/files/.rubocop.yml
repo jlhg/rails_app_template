@@ -4,12 +4,20 @@
 
 AllCops:
   NewCops: enable
+  TargetRubyVersion: 3.4
+  TargetRailsVersion: 8.0
   Exclude:
     - bin/*
     - db/schema.rb
     - db/migrate/*.rb
     - node_modules/**/*
     - vendor/**/*
+
+# Load RuboCop extensions using plugin mechanism
+plugins:
+  - rubocop-rails
+  - rubocop-rspec
+
 Layout/FirstArgumentIndentation:
   EnforcedStyle: special_for_inner_method_call_in_parentheses
 Layout/FirstHashElementIndentation:
@@ -124,3 +132,21 @@ Style/YodaCondition:
   Enabled: false
 Style/ZeroLengthPredicate:
   Enabled: false
+
+# RSpec configurations for API testing
+# API integration tests have different requirements than unit tests
+
+# API tests typically validate: status code, headers, body structure, and specific fields
+# Default Max: 1 is too restrictive for real-world API testing
+RSpec/MultipleExpectations:
+  Max: 5
+
+# API integration tests include: test data setup, request execution, and response validation
+# Default Max: 5 is often too short for meaningful integration tests
+RSpec/ExampleLength:
+  Max: 10
+
+# API tests often organize by: controller -> action -> context -> edge cases
+# Default Max: 3 can be limiting for comprehensive API test organization
+RSpec/NestedGroups:
+  Max: 5
