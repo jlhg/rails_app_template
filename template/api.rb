@@ -10,6 +10,9 @@ require_relative "../lib/base"
 remove_file ".gitignore"
 copy_file "files/.gitignore_template", ".gitignore"
 
+# Add RuboCop configuration
+copy_file "files/.rubocop.yml", ".rubocop.yml"
+
 # Add .dockerignore for Docker deployments
 copy_file "files/.dockerignore_template", ".dockerignore"
 
