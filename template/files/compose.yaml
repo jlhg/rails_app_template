@@ -49,6 +49,10 @@ x-web-common: &web-common
       # Set custom GitLab host if using self-hosted GitLab
       # Default: gitlab.com
       GITLAB_HOST: ${GITLAB_HOST:-gitlab.com}
+      # Git commit SHA for Sentry release tracking
+      # Set via: REVISION=$(git rev-parse --short HEAD) docker compose build
+      # Or add REVISION to .env file
+      REVISION: ${REVISION:-}
     secrets:
       - github_pat
       - gitlab_pat

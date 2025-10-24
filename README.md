@@ -81,6 +81,9 @@ bundle exec rake db:migrate db:test:prepare
 - **rubocop** - Ruby code analyzer
 - **benchmark-ips** - Performance benchmarking
 
+### Monitoring
+- **sentry-ruby** / **sentry-rails** - Error tracking and performance monitoring (production only)
+
 ## Rails 8 & Ruby 3.4 Optimizations
 
 - **No Spring**: Rails 8 removed Spring in favor of native optimizations
@@ -167,11 +170,84 @@ config.silence_healthcheck_path = "/up"
 
 This prevents `/up` requests from flooding your logs with noise, keeping focus on actual business requests.
 
+### Error Tracking & Performance Monitoring (Sentry)
+
+This template includes **Sentry** for real-time error tracking and performance monitoring in production.
+
+**Key Features:**
+- ✅ Automatic exception capture with detailed stack traces
+- ✅ Performance monitoring (APM) for API endpoints, database queries, external requests
+- ✅ Release tracking (correlate errors with deployments)
+- ✅ Smart alerting and notifications
+- ✅ Breadcrumbs (action trail leading to errors)
+- ✅ Issue trends and analytics
+
+**Configuration:**
+```bash
+# 1. Create Sentry account and project at https://sentry.io
+# 2. Set SENTRY_DSN environment variable
+export SENTRY_DSN=https://your-key@o123456.ingest.sentry.io/123456
+
+# 3. Build Docker image with git commit SHA for release tracking
+REVISION=$(git rev-parse --short HEAD) docker compose build
+```
+
+**Automatic Features:**
+- Only enabled in production (development uses Rails default error pages)
+- 10% performance sampling (configurable via `SENTRY_TRACES_SAMPLE_RATE`)
+- Automatic sensitive data filtering (passwords, tokens, secrets)
+- Health check filtering (`/up` excluded to save quota)
+- Release tracking via `REVISION` environment variable
+
+**Free Tier:**
+- 5,000 errors/month
+- 10,000 performance transactions/month
+- 30-day data retention
+- Perfect for small to medium projects
+
+**Error Report Example:**
+```
+NoMethodError: undefined method `name' for nil:NilClass
+- Stack trace with source code context
+- Request: POST /api/users
+- User: user_id=123, ip=1.2.3.4
+- Environment: production, release=abc123
+- Breadcrumbs: [login, navigate, click button, error]
+```
+
+**Performance Insight Example:**
+```
+/api/users#index
+- P95 response time: 450ms
+- Database queries: 8 queries (120ms)
+- External API calls: 1 call (200ms)
+- Memory allocation: 15MB
+```
+
+**Why Sentry?**
+
+While **Lograge** handles structured logging, **Sentry** specializes in error tracking and performance monitoring:
+
+| Feature | Lograge | Sentry |
+|---------|---------|--------|
+| **Purpose** | Structured logs | Error tracking + APM |
+| **Use Case** | General logging | Exception monitoring |
+| **Stack Traces** | No | Yes, with source context |
+| **Alerting** | No | Yes, real-time alerts |
+| **Performance** | Request duration only | Full APM with query details |
+| **Trends** | No | Yes, error trends & analytics |
+| **Search** | Requires log aggregator | Built-in search |
+
+**Best Practice:** Use both tools together:
+- **Lograge** → Daily logs, debugging, audit trail
+- **Sentry** → Critical errors, performance issues, alerting
+
 ### Included Files
 - **compose.yaml** - Docker Compose for production with PostgreSQL 18, Valkey 8, Rails, and Cloudflare Tunnel
 - **compose.local.yaml.example** - Development override (includes dev/test gems, live reload)
 - **Dockerfile** - Optimized build for Ruby 3.4 + Alpine (supports `BUNDLE_WITHOUT` build arg)
 - **docker-entrypoint.sh** - Entrypoint script for initialization and secret handling
+- **lib/tasks/docker.rake** - Docker Compose management tasks (build, up, down, logs, console, etc.)
 - **.dockerignore** - Reduces image size by excluding unnecessary files
 - **.secrets/** - Directory for storing sensitive data (gitignored)
 - **.env.example** - Application configuration (deployment-agnostic)
@@ -214,7 +290,42 @@ environment:
 | **Startup control** | Always runs migrations | Configurable via RAILS_DB_PREPARE |
 | **Configuration** | Hardcoded URLs | Flexible (URL or components) |
 
-### Quick Start
+### Docker Management with Rake Tasks
+
+This template includes **`lib/tasks/docker.rake`** for convenient Docker Compose management:
+
+```bash
+# Initial setup (create secrets automatically)
+rake docker:setup
+
+# Build and start (production-like environment)
+rake docker:build
+rake docker:up
+
+# Build and start (local development environment)
+rake docker:build[local]
+rake docker:up[local]
+
+# Common tasks
+rake docker:logs          # View logs
+rake docker:console       # Rails console
+rake docker:shell         # Bash shell
+rake docker:migrate       # Run migrations
+rake docker:down          # Stop containers
+
+# Database tasks
+rake docker:db:prepare    # First time setup
+rake docker:db:reset      # Reset database
+
+# Testing (local environment)
+rake docker:test:rspec[local]
+rake docker:test:rubocop[local]
+
+# See all available tasks
+rake docker:help
+```
+
+### Quick Start (Manual)
 
 ```bash
 # 1. Setup secrets (REQUIRED for security)

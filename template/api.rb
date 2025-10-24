@@ -41,6 +41,9 @@ directory "files/.secrets", ".secrets"
 # Copy documentation files
 directory "files/docs", "docs"
 
+# Add Docker management rake tasks
+copy_file "files/docker.rake", "lib/tasks/docker.rake"
+
 # Set secure permissions for .secrets directory
 # 700: Only owner can read/write/execute (prevents other users from listing)
 # This is required for Docker Compose to properly mount secrets
@@ -71,11 +74,13 @@ init_gem "bcrypt"
 init_gem "benchmark-ips"
 init_gem "alba"
 init_gem "rack-attack"
+init_gem "sentry"
 init_gem "jwt"
 init_gem "pundit"
 # init_gem "rails-i18n"
 recipe "rspec"
 recipe "config"
+recipe "sentry"
 recipe "database_yml"
 recipe "uuidv7"
 recipe "action_storage"

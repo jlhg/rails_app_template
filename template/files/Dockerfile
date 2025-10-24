@@ -5,6 +5,7 @@ FROM ruby:3.4-slim
 
 # Build arguments (can be overridden during build)
 ARG BUNDLE_WITHOUT="development:test"
+ARG REVISION=""
 
 # Set environment
 ENV LANG=C.UTF-8 \
@@ -12,7 +13,8 @@ ENV LANG=C.UTF-8 \
     BUNDLE_DEPLOYMENT=1 \
     BUNDLE_WITHOUT=${BUNDLE_WITHOUT} \
     RUBY_YJIT_ENABLE=1 \
-    RUBYOPT="--enable-frozen-string-literal"
+    RUBYOPT="--enable-frozen-string-literal" \
+    REVISION=${REVISION}
 
 # Enable jemalloc for optimized memory allocation (reduces memory usage by ~75%)
 # See docs/MEMORY_OPTIMIZATION.md for details
