@@ -25,7 +25,7 @@
 # - Can be overridden via .env file for testing
 # - If not set, release tracking is disabled
 
-initializer "sentry.rb", <<~'RUBY'
+initializer "sentry.rb", <<~RUBY
   # Sentry configuration for error tracking and performance monitoring
   # https://docs.sentry.io/platforms/ruby/guides/rails/
 

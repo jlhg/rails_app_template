@@ -6,6 +6,20 @@ end
 
 require_relative "../lib/base"
 
+# Ensure Ruby version is 3.4+ (this template is optimized for Ruby 3.4)
+# Use current Ruby version if 3.4+, otherwise default to 3.4.0
+ruby_version = Gem::Version.new(RUBY_VERSION)
+required_version = Gem::Version.new("3.4.0")
+
+if ruby_version < required_version
+  say "⚠️  Warning: This template is optimized for Ruby 3.4+", :yellow
+  say "   Current Ruby version: #{RUBY_VERSION}", :yellow
+  say "   Please consider upgrading to Ruby 3.4 or later", :yellow
+end
+
+remove_file ".ruby-version"
+create_file ".ruby-version", RUBY_VERSION
+
 # Replace default .gitignore with enhanced version
 remove_file ".gitignore"
 copy_file "files/.gitignore_template", ".gitignore"

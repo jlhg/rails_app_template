@@ -1,5 +1,22 @@
+# Load RuboCop extensions to prevent auto-load errors
+# Even though this is not a Rails app, rubocop-rails/rspec are installed system-wide
+# and cause errors when not properly configured
+plugins:
+  - rubocop-rails
+  - rubocop-rspec
+
 AllCops:
   NewCops: enable
+  Exclude:
+    # template/files/ contains files that will be copied to new projects
+    # These are templates, not part of this project itself
+    - 'template/files/**/*'
+
+# Rails cops configuration
+# Rakefile in this project is not a Rails rake file, it's just a utility script
+Rails/RakeEnvironment:
+  Exclude:
+    - 'Rakefile'
 Layout/FirstArgumentIndentation:
   EnforcedStyle: special_for_inner_method_call_in_parentheses
 Layout/FirstHashElementIndentation:
@@ -128,3 +145,4 @@ Naming/FileName:
 Security/Eval:
   Exclude:
     - 'lib/base.rb'
+

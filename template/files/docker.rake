@@ -41,7 +41,7 @@ namespace :docker do
   end
 
   desc "Build Docker image (usage: rake docker:build or docker:build[local])"
-  task :build, [:env] do |_t, args|
+  task :build, [:env] => :environment do |_t, args|
     env = args[:env]
     revision = git_revision
 
@@ -55,7 +55,7 @@ namespace :docker do
   end
 
   desc "Start containers (usage: rake docker:up or docker:up[local])"
-  task :up, [:env] do |_t, args|
+  task :up, [:env] => :environment do |_t, args|
     env = args[:env]
     puts "🚀 Starting containers..."
     docker_compose("up -d", env)
@@ -63,7 +63,7 @@ namespace :docker do
   end
 
   desc "Stop and remove containers"
-  task :down, [:env] do |_t, args|
+  task :down, [:env] => :environment do |_t, args|
     env = args[:env]
     puts "🛑 Stopping containers..."
     docker_compose("down", env)
@@ -71,7 +71,7 @@ namespace :docker do
   end
 
   desc "Restart containers"
-  task :restart, [:env] do |_t, args|
+  task :restart, [:env] => :environment do |_t, args|
     env = args[:env]
     puts "🔄 Restarting containers..."
     docker_compose("restart", env)
@@ -79,39 +79,39 @@ namespace :docker do
   end
 
   desc "View container logs (usage: docker:logs or docker:logs[local,web])"
-  task :logs, [:env, :service] do |_t, args|
+  task :logs, [:env, :service] => :environment do |_t, args|
     env = args[:env]
     service = args[:service] || ""
     docker_compose("logs -f #{service}", env)
   end
 
   desc "List running containers"
-  task :ps, [:env] do |_t, args|
+  task :ps, [:env] => :environment do |_t, args|
     env = args[:env]
     docker_compose("ps", env)
   end
 
   desc "Open shell in web container"
-  task :shell, [:env] do |_t, args|
+  task :shell, [:env] => :environment do |_t, args|
     env = args[:env]
     docker_compose("exec web bash", env)
   end
 
   desc "Open Rails console"
-  task :console, [:env] do |_t, args|
+  task :console, [:env] => :environment do |_t, args|
     env = args[:env]
     docker_compose("exec web bundle exec rails console", env)
   end
 
   desc "Run database migrations"
-  task :migrate, [:env] do |_t, args|
+  task :migrate, [:env] => :environment do |_t, args|
     env = args[:env]
     puts "🗄️  Running database migrations..."
     docker_compose("exec web bundle exec rails db:migrate", env)
   end
 
   desc "Initial setup (create secrets, prepare database)"
-  task :setup do
+  task setup: :environment do
     puts "🔧 Running initial setup..."
 
     # Check if .secrets directory exists
@@ -122,12 +122,12 @@ namespace :docker do
     end
 
     # Generate secrets if they don't exist
-    secrets = %w[
-      database_password
-      redis_cache_password
-      redis_cable_password
-      redis_session_password
-      rails_secret_key_base
+    secrets = [
+      "database_password",
+      "redis_cache_password",
+      "redis_cable_password",
+      "redis_session_password",
+      "rails_secret_key_base"
     ]
 
     secrets.each do |secret|
@@ -148,7 +148,7 @@ namespace :docker do
       end
 
       File.write(secret_file, secret_value)
-      File.chmod(0640, secret_file)
+      File.chmod(0o640, secret_file)
       puts "✅ Created #{secret_file}"
     end
 
@@ -167,7 +167,7 @@ namespace :docker do
   end
 
   desc "Clean up everything (DANGEROUS: removes volumes)"
-  task :clean, [:env] do |_t, args|
+  task :clean, [:env] => :environment do |_t, args|
     env = args[:env]
     print "⚠️  This will remove all containers, volumes, and data. Continue? (y/N): "
     response = $stdin.gets.chomp
@@ -184,7 +184,7 @@ namespace :docker do
   # Database tasks
   namespace :db do
     desc "Prepare database (create + migrate)"
-    task :prepare, [:env] do |_t, args|
+    task :prepare, [:env] => :environment do |_t, args|
       env = args[:env]
       puts "🗄️  Preparing database..."
       sh "RAILS_DB_PREPARE=true docker compose #{compose_files(env)} restart web"
@@ -192,13 +192,13 @@ namespace :docker do
     end
 
     desc "Create database"
-    task :create, [:env] do |_t, args|
+    task :create, [:env] => :environment do |_t, args|
       env = args[:env]
       docker_compose("exec web bundle exec rails db:create", env)
     end
 
     desc "Drop database"
-    task :drop, [:env] do |_t, args|
+    task :drop, [:env] => :environment do |_t, args|
       env = args[:env]
       print "⚠️  This will delete all data. Continue? (y/N): "
       response = $stdin.gets.chomp
@@ -210,7 +210,7 @@ namespace :docker do
     end
 
     desc "Reset database (drop + create + migrate)"
-    task :reset, [:env] do |_t, args|
+    task :reset, [:env] => :environment do |_t, args|
       env = args[:env]
       print "⚠️  This will delete all data and recreate database. Continue? (y/N): "
       response = $stdin.gets.chomp
@@ -222,7 +222,7 @@ namespace :docker do
     end
 
     desc "Seed database"
-    task :seed, [:env] do |_t, args|
+    task :seed, [:env] => :environment do |_t, args|
       env = args[:env]
       docker_compose("exec web bundle exec rails db:seed", env)
     end
@@ -231,12 +231,12 @@ namespace :docker do
   # Rails tasks
   namespace :rails do
     desc "Open Rails console"
-    task :console, [:env] do |_t, args|
+    task :console, [:env] => :environment do |_t, args|
       Rake::Task["docker:console"].invoke(args[:env])
     end
 
     desc "Run Rails command (usage: docker:rails:run[local,'db:migrate'])"
-    task :run, [:env, :command] do |_t, args|
+    task :run, [:env, :command] => :environment do |_t, args|
       env = args[:env]
       command = args[:command] || ""
       if command.empty?
@@ -251,14 +251,14 @@ namespace :docker do
   # Test tasks
   namespace :test do
     desc "Run RSpec tests"
-    task :rspec, [:env, :path] do |_t, args|
+    task :rspec, [:env, :path] => :environment do |_t, args|
       env = args[:env] || "local"
       path = args[:path] || ""
       docker_compose("exec web bundle exec rspec #{path}", env)
     end
 
     desc "Run RuboCop"
-    task :rubocop, [:env] do |_t, args|
+    task :rubocop, [:env] => :environment do |_t, args|
       env = args[:env] || "local"
       docker_compose("exec web bundle exec rubocop", env)
     end
@@ -266,19 +266,19 @@ namespace :docker do
 
   # Utility tasks
   desc "Show Docker Compose configuration"
-  task :config, [:env] do |_t, args|
+  task :config, [:env] => :environment do |_t, args|
     env = args[:env]
     docker_compose("config", env)
   end
 
   desc "Pull latest images"
-  task :pull, [:env] do |_t, args|
+  task :pull, [:env] => :environment do |_t, args|
     env = args[:env]
     docker_compose("pull", env)
   end
 
   desc "Show all available tasks"
-  task :help do
+  task help: :environment do
     puts <<~HELP
       Docker Compose Management Tasks
       ================================

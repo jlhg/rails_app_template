@@ -2,6 +2,12 @@
 # This file is generated from rails_app_template/.rubocop.yml
 # It contains general Ruby/Rails coding standards without project-specific rules
 
+# Merge configuration instead of replacing
+# This allows safe extension of this config in .rubocop_todo.yml or other files
+inherit_mode:
+  merge:
+    - Exclude
+
 AllCops:
   NewCops: enable
   TargetRubyVersion: 3.4
@@ -150,3 +156,8 @@ RSpec/ExampleLength:
 # Default Max: 3 can be limiting for comprehensive API test organization
 RSpec/NestedGroups:
   Max: 5
+
+# API tests may use descriptive context names beyond "when/with/without"
+# Examples: "environment files", "git files", etc. are clear in API security testing
+RSpec/ContextWording:
+  Enabled: false

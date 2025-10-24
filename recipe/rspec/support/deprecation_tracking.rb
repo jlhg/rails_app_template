@@ -35,7 +35,7 @@ RSpec.configure do |config|
           Thread.current[:deprecation_warnings] << {
             message:   message,
             location:  caller(2..2).first,
-            timestamp: Time.now
+            timestamp: Time.zone.now
           }
         end
         super
@@ -49,7 +49,7 @@ RSpec.configure do |config|
         Thread.current[:deprecation_warnings] << {
           message:   message,
           location:  callstack.first,
-          timestamp: Time.now,
+          timestamp: Time.zone.now,
           type:      "Rails"
         }
       end
@@ -83,7 +83,7 @@ RSpec.configure do |config|
 
         # Show up to 3 unique locations
         unique_locations = occurrences.map { |w| w[:location] }.uniq.take(3)
-        if unique_locations.count > 1
+        if unique_locations.many?
           puts "   Other locations:"
           unique_locations[1..].each do |location|
             puts "     - #{location}"
@@ -100,7 +100,7 @@ RSpec.configure do |config|
       if ENV["DEPRECATION_WARNINGS_FILE"]
         File.open(ENV["DEPRECATION_WARNINGS_FILE"], "w") do |f|
           f.puts "Deprecation Warnings Report"
-          f.puts "Generated: #{Time.now}"
+          f.puts "Generated: #{Time.zone.now}"
           f.puts "Total: #{all_warnings.count}"
           f.puts "\n"
 
