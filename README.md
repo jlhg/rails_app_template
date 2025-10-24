@@ -1,6 +1,6 @@
 # Rails application template
 
-This repo contains templates for new and existing projects optimized for **Rails 8** and **Ruby 3.4**.
+This repo contains templates for new and existing projects optimized for **Rails 8+** and **Ruby 3.4+**.
 
 The templates are designed for **API-only backend development** with PostgreSQL, focusing on modern API patterns and best practices.
 
@@ -10,10 +10,12 @@ See official documentation [Rails Application Templates](https://guides.rubyonra
 
 ### Create API backend project (using PostgreSQL)
 
-Run `rails new` command to create a new project:
-
 ```bash
-rails new <project_name> --api -d postgresql --skip-test -m template/api.rb
+# Clone this template repository
+git clone https://github.com/jlhg/rails_app_template.git
+
+# Create your new Rails project using the template
+rails new <project_name> --api -d postgresql --skip-test -m rails_app_template/template/api.rb
 ```
 
 ### Configuration
@@ -243,6 +245,7 @@ While **Lograge** handles structured logging, **Sentry** specializes in error tr
 - **Sentry** → Critical errors, performance issues, alerting
 
 ### Included Files
+
 - **compose.yaml** - Docker Compose for production with PostgreSQL 18, Valkey 8, Rails, and Cloudflare Tunnel
 - **compose.local.yaml.example** - Development override (includes dev/test gems, live reload)
 - **Dockerfile** - Optimized build for Ruby 3.4 + Alpine (supports `BUNDLE_WITHOUT` build arg)
