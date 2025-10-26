@@ -1354,18 +1354,14 @@ User.find_each(batch_size: 1000) { |u| process(u) }
 - Proper eager loading: Query count reduction **10-100x**
 - Counter cache: count queries reduction **100%**
 
-## OpenAPI Documentation (Optional)
+## OpenAPI Documentation
 
 This template includes a **standalone OpenAPI 3.1.0 documentation service** that runs independently from your Rails API using Docker and nginx.
 
 ### Quick Start
 
 ```bash
-# Enable OpenAPI documentation in your project
-# Uncomment in template/api.rb:
-# recipe "openapi_doc"
-
-# Then create your Rails project
+# Create your Rails project
 rails new myapp --api -d postgresql --skip-test -m rails_app_template/template/api.rb
 
 # Start documentation service

@@ -103,6 +103,7 @@ recipe "database_yml"
 recipe "uuidv7"
 recipe "action_storage"
 recipe "action_cable"
+recipe "openapi_doc"
 # recipe "google-cloud-storage"
 
 run "bundle install"
