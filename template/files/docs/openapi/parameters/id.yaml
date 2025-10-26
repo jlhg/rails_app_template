@@ -1,8 +1,7 @@
+# Path parameter for resource ID
+# References the common id attribute definition
 name: id
 in: path
 required: true
-description: Resource unique identifier (UUIDv7)
 schema:
-  type: string
-  format: uuid
-example: "018f4d9e-5c4a-7000-9f8b-3a4c5d6e7f8a"
+  $ref: "../attributes/common.yaml#/id"

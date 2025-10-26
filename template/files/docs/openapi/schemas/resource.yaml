@@ -1,37 +1,19 @@
+# Resource schema - combines common and resource-specific attributes
+# This schema represents the complete Resource model as returned by the API
 type: object
 properties:
   id:
-    type: string
-    format: uuid
-    description: Resource unique identifier (UUIDv7)
-    example: "018f4d9e-5c4a-7000-9f8b-3a4c5d6e7f8a"
+    $ref: "../attributes/common.yaml#/id"
   name:
-    type: string
-    description: Resource name
-    example: "Example Resource"
+    $ref: "../attributes/resource.yaml#/name"
   description:
-    type: string
-    nullable: true
-    description: Resource description
-    example: "This is an example resource"
+    $ref: "../attributes/resource.yaml#/description"
   status:
-    type: string
-    enum:
-      - active
-      - inactive
-      - pending
-    description: Resource status
-    example: "active"
+    $ref: "../attributes/resource.yaml#/status"
   created_at:
-    type: string
-    format: date-time
-    description: Creation timestamp
-    example: "2025-01-15T10:30:00Z"
+    $ref: "../attributes/common.yaml#/created_at"
   updated_at:
-    type: string
-    format: date-time
-    description: Last update timestamp
-    example: "2025-01-15T10:30:00Z"
+    $ref: "../attributes/common.yaml#/updated_at"
 required:
   - id
   - name

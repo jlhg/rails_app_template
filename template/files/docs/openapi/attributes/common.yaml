@@ -1,0 +1,26 @@
+# Common attributes shared across all models
+# These attributes represent standard fields present in most Rails models
+
+id:
+  type: string
+  format: uuid
+  description: Unique identifier (UUIDv7)
+  example: "018f4d9e-5c4a-7000-9f8b-3a4c5d6e7f8a"
+
+created_at:
+  type: string
+  format: date-time
+  description: Creation timestamp
+  example: "2025-01-15T10:30:00Z"
+
+updated_at:
+  type: string
+  format: date-time
+  description: Last update timestamp
+  example: "2025-01-15T10:30:00Z"
+
+datetime:
+  type: string
+  format: date-time
+  description: Generic datetime field
+  example: "2025-01-15T10:30:00Z"

@@ -1,0 +1,23 @@
+# Resource-specific attributes
+# Define attributes specific to the Resource model
+# Extend this file when customizing your API's Resource model
+
+name:
+  type: string
+  description: Resource name
+  example: "Example Resource"
+
+description:
+  type: string
+  nullable: true
+  description: Resource description
+  example: "This is an example resource"
+
+status:
+  type: string
+  enum:
+    - active
+    - inactive
+    - pending
+  description: Resource status
+  example: "active"

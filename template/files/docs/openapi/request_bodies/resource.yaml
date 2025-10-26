@@ -1,3 +1,5 @@
+# Request bodies for Resource operations
+# Uses $ref to attributes to ensure consistency with the Resource schema
 create:
   description: Request body for creating a new resource
   required: true
@@ -7,22 +9,11 @@ create:
         type: object
         properties:
           name:
-            type: string
-            description: Resource name
-            example: "New Resource"
+            $ref: "../attributes/resource.yaml#/name"
           description:
-            type: string
-            nullable: true
-            description: Resource description
-            example: "Description of the new resource"
+            $ref: "../attributes/resource.yaml#/description"
           status:
-            type: string
-            enum:
-              - active
-              - inactive
-              - pending
-            description: Resource status
-            example: "active"
+            $ref: "../attributes/resource.yaml#/status"
         required:
           - name
           - status
@@ -36,19 +27,8 @@ update:
         type: object
         properties:
           name:
-            type: string
-            description: Resource name
-            example: "Updated Resource"
+            $ref: "../attributes/resource.yaml#/name"
           description:
-            type: string
-            nullable: true
-            description: Resource description
-            example: "Updated description"
+            $ref: "../attributes/resource.yaml#/description"
           status:
-            type: string
-            enum:
-              - active
-              - inactive
-              - pending
-            description: Resource status
-            example: "active"
+            $ref: "../attributes/resource.yaml#/status"

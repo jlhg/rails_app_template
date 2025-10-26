@@ -26,7 +26,7 @@ docker compose down
 
 ```
 docs/openapi/
-├── Dockerfile              # nginx:1.27-alpine with embedded configuration
+├── Dockerfile              # nginx:1.29-alpine with embedded configuration
 ├── compose.yaml            # Docker Compose configuration
 ├── .dockerignore           # Files excluded from Docker image
 ├── .gitignore              # Files excluded from git
@@ -34,7 +34,9 @@ docs/openapi/
 ├── index.html              # Documentation entry page
 ├── swagger.html            # Swagger UI interface
 ├── redoc.html              # ReDoc interface
-├── attributes/             # Custom attribute definitions (extend as needed)
+├── attributes/             # Atomic attribute definitions (like Rails model fields)
+│   ├── common.yaml        # Shared attributes: id, created_at, updated_at
+│   └── resource.yaml      # Resource-specific attributes: name, description, status
 ├── parameters/             # Reusable parameter definitions
 │   ├── id.yaml            # UUID path parameter
 │   └── pagination.yaml    # Pagination query parameters
@@ -44,11 +46,38 @@ docs/openapi/
 │   ├── success.yaml       # Success response formats
 │   ├── error.yaml         # Error response formats
 │   └── not_found.yaml     # 404 response
-└── schemas/                # Data model schemas
-    ├── resource.yaml      # Example resource model
+└── schemas/                # Data model schemas (like Rails serializers)
+    ├── resource.yaml      # Example resource model (combines attributes)
     ├── error.yaml         # Error response schema
     └── metadata.yaml      # Pagination metadata schema
 ```
+
+### Three-Layer Architecture
+
+This template uses a modular three-layer design inspired by the relationship between Rails models and serializers:
+
+**Layer 1: Attributes** (Atomic Definitions)
+- Define individual field properties (type, format, validation, examples)
+- Similar to Rails model columns
+- Stored in `attributes/` directory
+- Example: `common.yaml` defines `id`, `created_at`, `updated_at`
+
+**Layer 2: Schemas** (Composition)
+- Combine attributes to form complete data models
+- Similar to Rails serializers (Alba, ActiveModel::Serializers)
+- Reference attributes using `$ref`
+- Stored in `schemas/` directory
+
+**Layer 3: Endpoints** (Usage)
+- `request_bodies/` and `responses/` reference schemas or attributes
+- Define API request/response structures
+- Use `$ref` to maintain consistency
+
+**Benefits:**
+- **DRY Principle**: Define each attribute once, reuse everywhere
+- **Consistency**: Same field has identical definition across all endpoints
+- **Easy Maintenance**: Update attribute in one place, changes propagate everywhere
+- **Scalability**: Add new models by creating new attribute + schema files
 
 ## Features
 
@@ -99,7 +128,114 @@ info:
   description: Your API description
 ```
 
-### 2. Add New Endpoints
+### 2. Add New Models (Example: User)
+
+Follow the three-layer architecture to add a new model:
+
+**Step 1: Define model-specific attributes** (`attributes/user.yaml`):
+```yaml
+# User-specific attributes
+email:
+  type: string
+  format: email
+  description: User email address
+  example: "user@example.com"
+
+username:
+  type: string
+  description: User login name
+  minLength: 3
+  maxLength: 50
+  example: "johndoe"
+
+role:
+  type: string
+  enum:
+    - admin
+    - user
+    - guest
+  description: User role
+  example: "user"
+```
+
+**Step 2: Create schema combining attributes** (`schemas/user.yaml`):
+```yaml
+# User schema - combines common and user-specific attributes
+type: object
+properties:
+  id:
+    $ref: "../attributes/common.yaml#/id"
+  username:
+    $ref: "../attributes/user.yaml#/username"
+  email:
+    $ref: "../attributes/user.yaml#/email"
+  role:
+    $ref: "../attributes/user.yaml#/role"
+  created_at:
+    $ref: "../attributes/common.yaml#/created_at"
+  updated_at:
+    $ref: "../attributes/common.yaml#/updated_at"
+required:
+  - id
+  - username
+  - email
+  - role
+  - created_at
+  - updated_at
+```
+
+**Step 3: Create request bodies** (`request_bodies/user.yaml`):
+```yaml
+create:
+  description: Request body for user registration
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          username:
+            $ref: "../attributes/user.yaml#/username"
+          email:
+            $ref: "../attributes/user.yaml#/email"
+          password:
+            type: string
+            format: password
+            description: User password
+        required:
+          - username
+          - email
+          - password
+```
+
+**Step 4: Add endpoints** in `spec.yaml`:
+```yaml
+paths:
+  /users:
+    get:
+      summary: List all users
+      responses:
+        200:
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "schemas/user.yaml"
+    post:
+      summary: Create a new user
+      requestBody:
+        $ref: "request_bodies/user.yaml#/create"
+      responses:
+        201:
+          description: User created successfully
+```
+
+### 3. Add New Endpoints
 
 Add new paths in `spec.yaml`:
 
@@ -111,35 +247,27 @@ paths:
       # ... endpoint details
 ```
 
-### 3. Create Reusable Components
+### 5. Modify Existing Attributes
 
-**Add a new schema** (`schemas/your_model.yaml`):
+When you update an attribute definition, all schemas referencing it automatically inherit the changes.
+
+**Example: Add validation to name attribute** (`attributes/resource.yaml`):
 ```yaml
-type: object
-properties:
-  id:
-    type: string
-    format: uuid
-  # ... other properties
+name:
+  type: string
+  description: Resource name
+  minLength: 3       # Add minimum length validation
+  maxLength: 100     # Add maximum length validation
+  pattern: "^[a-zA-Z0-9 ]+$"  # Add pattern validation
+  example: "Example Resource"
 ```
 
-**Add a new response** (`responses/your_response.yaml`):
-```yaml
-description: Your response description
-content:
-  application/json:
-    schema:
-      $ref: "../schemas/your_model.yaml"
-```
+This change automatically applies to:
+- `schemas/resource.yaml` (which references it)
+- `request_bodies/resource.yaml` (which references it)
+- All API endpoints using these schemas
 
-**Reference in spec.yaml**:
-```yaml
-responses:
-  200:
-    $ref: "responses/your_response.yaml"
-```
-
-### 4. Configure Authentication
+### 6. Configure Authentication
 
 The template includes JWT Bearer authentication. To use a different method, edit the `securitySchemes` section in `spec.yaml`:
 
