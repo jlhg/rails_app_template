@@ -45,6 +45,8 @@ remove_file "Dockerfile"
 copy_file "files/Dockerfile", "Dockerfile"
 
 # Add Docker entrypoint script (Rails 8.1+ convention: bin/docker-entrypoint)
+# Rails 8.1+ creates bin/docker-entrypoint by default, so we need to remove it first
+remove_file "bin/docker-entrypoint"
 copy_file "files/docker-entrypoint.sh", "bin/docker-entrypoint"
 chmod "bin/docker-entrypoint", 0755
 
