@@ -52,9 +52,6 @@ copy_file "files/.env.local.example", ".env.local.example"
 # Create .secrets directory for Docker secrets with proper permissions
 directory "files/.secrets", ".secrets"
 
-# Copy documentation files
-directory "files/docs", "docs"
-
 # Add Docker management rake tasks
 copy_file "files/docker.rake", "lib/tasks/docker.rake"
 

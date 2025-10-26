@@ -5,7 +5,7 @@
 This is a **Rails 8 application template project** for quickly creating Rails API projects following best practices.
 
 **Key Features:**
-- ✅ Rails 8 + Ruby 3.4 optimizations (YJIT enabled)
+- ✅ Rails 8.1 + Ruby 3.4 optimizations (YJIT enabled)
 - ✅ API-only architecture (PostgreSQL 18, Valkey 8)
 - ✅ UUIDv7 primary keys (bigint-level performance, prevents business intel leakage)
 - ✅ Production-grade Docker configuration (multi-stage build, secrets management)
@@ -279,21 +279,21 @@ init_gem "pagy"
 2. Delete or keep `gem/<gem_name>.rb` (keep for optional use)
 3. Remove related recipe calls
 
-### Task 3: Update Rails 8 Compatibility
+### Task 3: Update Rails 8.1 Compatibility
 
 **Check items:**
-1. Verify Rails 8 default included gems (avoid duplication)
+1. Verify Rails 8.1 default included gems (avoid duplication)
    - `debug` gem (Ruby 3.1+)
    - Health check endpoint (`/up`)
-   - Solid Queue, Solid Cache (Rails 8 additions)
+   - Solid Queue, Solid Cache (Rails 8+ additions)
 
 2. Check deprecated configuration
    ```bash
-   # Create Rails 8 test project
-   rails new rails8_test --api -d postgresql --skip-test --skip-bundle
+   # Create Rails 8.1 test project
+   rails new rails8_1_test --api -d postgresql --skip-test --skip-bundle
 
    # Compare default configuration
-   diff rails8_test/config/environments/production.rb \
+   diff rails8_1_test/config/environments/production.rb \
         test_app/config/environments/production.rb
    ```
 
@@ -315,7 +315,7 @@ rails g model Order user:references status:string
 
 ```ruby
 # db/migrate/xxx_create_orders.rb (auto-generated)
-class CreateOrders < ActiveRecord::Migration[8.0]
+class CreateOrders < ActiveRecord::Migration[8.1]
   def change
     create_table :orders, id: :uuid do |t|
       t.references :user, type: :uuid, foreign_key: true
@@ -384,23 +384,23 @@ recipe "config/log"  # Then execute configuration
 
 **Reason:** `init_gem` executes `gem "..."` command, must complete before `bundle install`. Recipe executes when gem may not yet be installed.
 
-### ⚠️ 2. Rails 8 Default Gems
+### ⚠️ 2. Rails 8.1 Default Gems
 
 **Checklist:**
-- ✅ `debug` gem - Rails 8 includes by default, don't install duplicate
-- ✅ `config.silence_healthcheck_path = "/up"` - Rails 8 default config, don't duplicate
-- ✅ Solid Queue, Solid Cache - Rails 8 additions, evaluate if needed
+- ✅ `debug` gem - Rails 8.1 includes by default, don't install duplicate
+- ✅ `config.silence_healthcheck_path = "/up"` - Rails 8.1 default config, don't duplicate
+- ✅ Solid Queue, Solid Cache - Rails 8+ additions, evaluate if needed
 
 **Verification:**
 ```bash
-# Create clean Rails 8 project
-rails new rails8_check --api -d postgresql --skip-test --skip-bundle
+# Create clean Rails 8.1 project
+rails new rails8_1_check --api -d postgresql --skip-test --skip-bundle
 
 # Check Gemfile
-grep "gem 'debug'" rails8_check/Gemfile
+grep "gem 'debug'" rails8_1_check/Gemfile
 
 # Check production.rb
-grep "silence_healthcheck_path" rails8_check/config/environments/production.rb
+grep "silence_healthcheck_path" rails8_1_check/config/environments/production.rb
 ```
 
 ### ⚠️ 3. Duplicate Gem Installation
@@ -497,7 +497,7 @@ docs(readme): Update lograge configuration section
 # Remove duplicate configuration
 fix(config): Remove duplicate silence_healthcheck_path
 
-Rails 8 includes this configuration by default in production.rb
+Rails 8.1 includes this configuration by default in production.rb
 ```
 
 ## Testing Strategy
@@ -595,8 +595,8 @@ if ruby_version < Gem::Version.new('3.4.0')
   puts "Warning: This template is optimized for Ruby 3.4+"
 end
 
-if rails_version < Gem::Version.new('8.0.0')
-  puts "Warning: This template is optimized for Rails 8+"
+if rails_version < Gem::Version.new('8.1.0')
+  puts "Warning: This template is optimized for Rails 8.1+"
 end
 ```
 
@@ -618,9 +618,9 @@ end
 cd /tmp && rails new test_app --api -d postgresql --skip-test \
   -m ~/work/jlhg/rails_app_template/template/api.rb
 
-# Check Rails 8 default configuration
-rails new rails8_default --api -d postgresql --skip-test --skip-bundle
-grep -r "config\." rails8_default/config/environments/
+# Check Rails 8.1 default configuration
+rails new rails8_1_default --api -d postgresql --skip-test --skip-bundle
+grep -r "config\." rails8_1_default/config/environments/
 
 # Run RuboCop
 cd ~/work/jlhg/rails_app_template
@@ -660,6 +660,6 @@ route "get '/api/status', to: 'status#show'"     # Add route
 
 ---
 
-**Last Updated:** 2025-10-15
+**Last Updated:** 2025-10-26
 **Maintainer:** jlhg
-**Project Version:** Rails 8 + Ruby 3.4
+**Project Version:** Rails 8.1 + Ruby 3.4

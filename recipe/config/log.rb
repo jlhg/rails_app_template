@@ -7,7 +7,7 @@
 # Development: Human-readable colorized logs
 # Test: Minimal logs (warn level)
 #
-# Note: Rails 8 automatically silences /up health check requests by default
+# Note: Rails 8.1+ automatically silences /up health check requests by default
 # (config.silence_healthcheck_path = "/up" is already configured in production.rb)
 
 # Production environment: Structured JSON logs with Lograge

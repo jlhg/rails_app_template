@@ -1,6 +1,6 @@
 # Rails application template
 
-This repo contains templates for new and existing projects optimized for **Rails 8+** and **Ruby 3.4+**.
+This repo contains templates for new and existing projects optimized for **Rails 8.1+** and **Ruby 3.4+**.
 
 The templates are designed for **API-only backend development** with PostgreSQL, focusing on modern API patterns and best practices.
 
@@ -86,9 +86,9 @@ bundle exec rake db:migrate db:test:prepare
 ### Monitoring
 - **sentry-ruby** / **sentry-rails** - Error tracking and performance monitoring (production only)
 
-## Rails 8 & Ruby 3.4 Optimizations
+## Rails 8.1 & Ruby 3.4 Optimizations
 
-- **No Spring**: Rails 8 removed Spring in favor of native optimizations
+- **No Spring**: Rails 8.1 removed Spring in favor of native optimizations
 - **Transactional Fixtures**: Uses Rails built-in transactional fixtures instead of database_cleaner
 - **Time Helpers**: Uses Rails built-in time helpers (`travel_to`, `freeze_time`) instead of timecop
 - **Updated RuboCop**: Fixed deprecated cop names for modern Ruby standards
@@ -369,7 +369,7 @@ curl http://localhost:3000
 - ✅ **Docker secrets for all sensitive data**
 
 **Services:**
-- **web** - Rails 8 API (port 3000) + **YJIT enabled** + ActionCable WebSocket
+- **web** - Rails 8.1 API (port 3000) + **YJIT enabled** + ActionCable WebSocket
 - **pg** - PostgreSQL 18 Alpine + **password protected**
 - **redis_cache** - Valkey 8 (Rails.cache, rate limiting) + LRU eviction
 - **redis_cable** - Valkey 8 (ActionCable pub/sub) + no eviction
@@ -1373,7 +1373,7 @@ binding.break  # or just 'debugger'
 
 **Why not pry-rails?**
 - pry-rails is no longer maintained
-- Rails 8 + Ruby 3.4 has powerful built-in IRB with syntax highlighting and autocomplete
+- Rails 8.1 + Ruby 3.4 has powerful built-in IRB with syntax highlighting and autocomplete
 - `debug` gem is officially supported with VS Code integration (vscode-rdbg)
 
 **For phone validation:** This template doesn't include phonelib by default. For most API projects:
