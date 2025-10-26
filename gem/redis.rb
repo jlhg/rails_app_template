@@ -10,8 +10,6 @@
 # - Better performance (3x throughput in Valkey 8.0)
 # - Fully open source (BSD-3), no licensing concerns
 # - redis-rb gem officially supports Valkey 7.2+, 8.x
-#
-# To switch back to Redis, see docs/REDIS_ARCHITECTURE.md
 gem "redis"
 
 # Connection pooling for Valkey/Redis (required for ActionCable and multi-threaded servers)

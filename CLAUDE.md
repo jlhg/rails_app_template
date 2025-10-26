@@ -55,7 +55,6 @@ rails_app_template/
 │       ├── compose.yaml
 │       ├── .env.example
 │       ├── .secrets/      # Docker secrets examples
-│       ├── docs/          # Project documentation templates
 │       └── ...
 │
 ├── lib/                    # Helper methods
@@ -304,7 +303,6 @@ init_gem "pagy"
 - `README.md` - User documentation
 - `gem/<gem_name>.rb` - Gem description comments
 - `recipe/*.rb` - Recipe header comments
-- `template/files/docs/*.md` - Project documentation templates (if relevant)
 
 ### Task 5: Working with UUIDv7 Primary Keys
 
@@ -361,8 +359,7 @@ end
 - ✅ PostgreSQL 18 native support (no extra gems needed)
 - ✅ Time-ordered (excellent B-tree index locality)
 
-**Documentation:**
-- Full guide: `template/files/docs/ID_STRATEGY.md`
+**Configuration:**
 - Configuration: `recipe/uuidv7.rb`
 
 ## Considerations and Common Pitfalls
@@ -452,8 +449,7 @@ RUBY
 **Checklist:**
 1. README.md "Included Gems" section
 2. gem/<gem_name>.rb comment descriptions
-3. template/files/docs/ related documentation
-4. CLAUDE.md (this file) if development conventions changed
+3. CLAUDE.md (this file) if development conventions changed
 
 ### ⚠️ 6. Secrets and Sensitive Data
 
@@ -612,11 +608,6 @@ end
 
 **Project documentation:**
 - README.md - User guide
-- template/files/docs/ - Generated project documentation templates
-  - AUTHENTICATION.md - Authentication architecture guide
-  - RATE_LIMITING.md - API rate limiting guide
-  - ZERO_DOWNTIME_DEPLOYMENT.md - Zero-downtime deployment
-  - REDIS_ARCHITECTURE.md - Redis/Valkey architecture
 
 ## Quick Reference
 

@@ -17,7 +17,6 @@ ENV LANG=C.UTF-8 \
     REVISION=${REVISION}
 
 # Enable jemalloc for optimized memory allocation (reduces memory usage by ~75%)
-# See docs/MEMORY_OPTIMIZATION.md for details
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
 
 # Optional: Fine-tune jemalloc behavior

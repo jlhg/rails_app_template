@@ -9,9 +9,4 @@ gem "rack-attack"
 # - Endpoint sensitivity (login vs read-only)
 # - Business requirements (subscription tiers)
 #
-# See docs/RATE_LIMITING.md for:
-# - Best practices and strategies
-# - Complete examples for different scenarios
-# - Testing and monitoring guidance
-#
 # To configure, create config/initializers/rack_attack.rb with your rules.

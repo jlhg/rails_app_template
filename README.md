@@ -94,7 +94,7 @@ bundle exec rake db:migrate db:test:prepare
 - **Updated RuboCop**: Fixed deprecated cop names for modern Ruby standards
 - **YJIT Enabled**: Ruby 3.4 YJIT provides 15-30% performance improvement
 - **Frozen String Literals**: Memory optimization with `--enable-frozen-string-literal`
-- **UUIDv7 Primary Keys**: PostgreSQL 18 native UUIDv7 for secure, time-ordered IDs with bigint-level performance (see [docs/ID_STRATEGY.md](docs/ID_STRATEGY.md))
+- **UUIDv7 Primary Keys**: PostgreSQL 18 native UUIDv7 for secure, time-ordered IDs with bigint-level performance
 
 ## Testing Enhancements
 
@@ -102,7 +102,7 @@ bundle exec rake db:migrate db:test:prepare
 - **ActiveJob Helpers**: Built-in support for testing background jobs with `:inline_jobs` tag
 - **Seed Data Loading**: Automatic loading of `db/seeds.rb` in test suite
 - **Storage Host Mocking**: Pre-configured ActiveStorage URL generation for tests
-- **Deprecation Tracking**: Automatic detection and reporting of Ruby/Rails deprecation warnings during tests (see [docs/DEPRECATION_TRACKING.md](docs/DEPRECATION_TRACKING.md))
+- **Deprecation Tracking**: Automatic detection and reporting of Ruby/Rails deprecation warnings during tests
 
 ## Docker Deployment
 
@@ -475,9 +475,6 @@ docker compose --profile cloudflare up -d
 - Free plan: 100s timeout (ActionCable auto-reconnects)
 - Pro/Business: 600s timeout
 - Enterprise: Unlimited
-
-**For detailed setup with ActionCable configuration:**
-📖 **[docs/CLOUDFLARE_TUNNEL.md](docs/CLOUDFLARE_TUNNEL.md)**
 
 ### Production Deployment
 
@@ -914,9 +911,6 @@ REDIS_SESSION.with { |r| r.setex("token:#{token}", 24.hours.to_i, user_id) }
 - **10,000-100,000 users**: 4GB cache + 2GB cable + 2GB session
 - **100,000+ users**: Consider Redis cluster or managed service
 
-**For detailed architecture explanation, troubleshooting, and scaling guides:**
-📖 **[docs/REDIS_ARCHITECTURE.md](docs/REDIS_ARCHITECTURE.md)**
-
 ## Resource ID Strategy
 
 This template uses **UUIDv7** as the default primary key type for all database tables, leveraging PostgreSQL 18's native support.
@@ -984,15 +978,6 @@ create_table :join_table, id: :bigint do |t|
 end
 ```
 
-**For complete ID strategy guide including:**
-- UUIDv7 vs bigint vs ULID comparison
-- Performance benchmarks and analysis
-- Security best practices
-- Migration examples
-- When to use each ID type
-
-📖 **[docs/ID_STRATEGY.md](docs/ID_STRATEGY.md)**
-
 ## Authentication Architecture
 
 This template provides comprehensive documentation for implementing access token authentication using a **hybrid Redis + PostgreSQL approach**.
@@ -1037,16 +1022,13 @@ Redis crashes/restarts
 
 ### Implementation
 
-This template **does not include** authentication implementation code - only comprehensive documentation explaining:
+This template **does not include** authentication implementation code. You should implement authentication based on your specific requirements:
 
 - Token generation strategy (opaque tokens with SHA256 digest)
 - Token verification flow (Redis fast path, PostgreSQL fallback)
 - Security best practices (entropy, expiration, never store plaintext)
 - Performance optimization (cache hit rate, async updates)
 - Alternative approaches comparison
-
-**For complete authentication guide with examples and best practices:**
-📖 **[docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)**
 
 ### Using redis_session for Tokens
 
@@ -1066,7 +1048,7 @@ end
 user_id = REDIS_SESSION.with { |r| r.get("token:#{token}") }
 ```
 
-**Note**: This is **conceptual code only**. Implement based on your specific requirements following the guide in `docs/AUTHENTICATION.md`.
+**Note**: This is **conceptual code only**. Implement based on your specific requirements.
 
 ## Rate Limiting
 
@@ -1109,25 +1091,6 @@ class Rack::Attack
 end
 ```
 
-### Comprehensive Documentation
-
-**Complete best practices guide covers:**
-- **Strategy Selection**: IP-based vs User-based vs Endpoint-based
-- **Algorithm Comparison**: Fixed Window, Sliding Window, Token Bucket, Leaky Bucket
-- **Scenario Examples**:
-  - Public API
-  - Private API (authenticated users)
-  - Login endpoint protection (prevent credential stuffing)
-  - Expensive operations (file uploads, report generation)
-  - WebSocket connection limits
-  - Subscription-based API (Free/Pro/Enterprise tiers)
-- **Cloudflare Integration**: Two-layer defense (edge + application layer)
-- **Testing Methods**: RSpec, load testing, curl testing
-- **Monitoring**: Prometheus metrics, alert rules
-- **Troubleshooting**: Common issues and solutions
-
-📖 **[docs/RATE_LIMITING.md](docs/RATE_LIMITING.md)**
-
 ### Redis Integration (Pre-configured)
 
 Rack::Attack automatically uses `Rails.cache` (configured as `redis_cache`):
@@ -1159,14 +1122,6 @@ When updating applications in production, **zero-downtime deployment** is a crit
 - **Backward Compatibility**: New version reads old data, old version handles new data
 - **Health Checks**: Liveness and Readiness probes
 - **Graceful Shutdown**: Complete existing requests before shutdown
-
-**Complete guide covers:**
-- Database migration safety strategies (add/delete/rename columns)
-- Rolling/Blue-Green/Canary deployment
-- Common pitfalls (NOT NULL constraints, Enum changes, API format changes)
-- Production checklist
-
-📖 **[docs/ZERO_DOWNTIME_DEPLOYMENT.md](docs/ZERO_DOWNTIME_DEPLOYMENT.md)**
 
 ## Per-Request Global State (CurrentAttributes)
 
@@ -1212,14 +1167,6 @@ end
 - ✅ Officially maintained and supported
 - ✅ No additional dependencies
 
-**Complete guide covers:**
-- Multi-tenant application examples
-- Log tracking integration
-- Best practices and considerations
-- Testing strategies
-
-📖 **[docs/CURRENT_ATTRIBUTES.md](docs/CURRENT_ATTRIBUTES.md)**
-
 ## Input Normalization
 
 User input often contains **unexpected leading/trailing whitespace**, requiring normalization to ensure data consistency and query accuracy.
@@ -1261,22 +1208,6 @@ user = User.create!(email: " JOHN@EXAMPLE.COM ")
 User.find_by(email: "  JOHN@EXAMPLE.COM  ")
 # → Automatically converts query condition, finds user ✅
 ```
-
-### Complete Documentation
-
-**Detailed implementation guide covers:**
-- **Solution Comparison**: normalizes vs Model Callback vs Strong Parameters vs Gem
-- **Fields NOT to normalize**: passwords, JSON, free text, code
-- **Common Scenarios**:
-  - Complete email normalization (strip + downcase + unicode normalize)
-  - Username, phone number, URL/Slug
-  - Search form parameter handling
-  - Multi-language content
-- **Testing Strategies**: create, query, uniqueness validation
-- **Performance Considerations**: Benchmarks and optimization recommendations
-- **Decision table and checklist**
-
-📖 **[docs/INPUT_NORMALIZATION.md](docs/INPUT_NORMALIZATION.md)**
 
 ## N+1 Query Detection (Prosopite)
 
