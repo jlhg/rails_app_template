@@ -1354,6 +1354,86 @@ User.find_each(batch_size: 1000) { |u| process(u) }
 - Proper eager loading: Query count reduction **10-100x**
 - Counter cache: count queries reduction **100%**
 
+## OpenAPI Documentation (Optional)
+
+This template includes a **standalone OpenAPI 3.1.0 documentation service** that runs independently from your Rails API using Docker and nginx.
+
+### Quick Start
+
+```bash
+# Enable OpenAPI documentation in your project
+# Uncomment in template/api.rb:
+# recipe "openapi_doc"
+
+# Then create your Rails project
+rails new myapp --api -d postgresql --skip-test -m rails_app_template/template/api.rb
+
+# Start documentation service
+cd myapp/docs/openapi
+docker compose up
+```
+
+**Access documentation:**
+- **Swagger UI**: http://localhost:8080/swagger.html (Interactive API testing)
+- **ReDoc**: http://localhost:8080/redoc.html (Beautiful documentation)
+
+### Features
+
+- **Standalone Service**: Documentation runs in separate container (no Rails dependency)
+- **Dual Interfaces**: Both Swagger UI (testing) and ReDoc (reading)
+- **Minimal Skeleton**: 1-2 example endpoints with complete CRUD operations
+- **Modular Structure**: Organized into schemas, responses, parameters, and request bodies
+- **Live Editing**: Changes to YAML files reflected immediately (volume mounted)
+- **Docker-Based**: Single `docker compose up` command to start
+
+### Structure
+
+```
+docs/openapi/
+├── spec.yaml              # Main OpenAPI specification (customize your API here)
+├── Dockerfile             # nginx:alpine for static file serving
+├── compose.yaml           # Standalone documentation service
+├── schemas/               # Data model definitions (resource, error, metadata)
+├── responses/             # Response templates (success, error, not_found)
+├── parameters/            # Reusable parameters (id, pagination)
+└── request_bodies/        # Request body definitions (create, update)
+```
+
+### Customization
+
+**1. Update API information** (`spec.yaml`):
+```yaml
+info:
+  title: Your API Name
+  version: 1.0.0
+  description: Your API description
+```
+
+**2. Add new endpoints** (`spec.yaml`):
+```yaml
+paths:
+  /your-endpoint:
+    get:
+      summary: Your endpoint description
+      responses:
+        200:
+          $ref: "responses/your_response.yaml"
+```
+
+**3. Create reusable components**:
+- Add schemas: `schemas/your_model.yaml`
+- Add responses: `responses/your_response.yaml`
+- Reference in `spec.yaml` using `$ref`
+
+### Design Principles
+
+- **Generic Examples**: Uses abstract "Resources" (not business-specific)
+- **Best Practices**: OpenAPI 3.1.0 compliant, modular organization
+- **Security-Ready**: JWT Bearer auth pre-configured (customize as needed)
+- **Documentation-First**: Design API before implementation
+
+See `docs/openapi/README.md` for complete documentation and customization guide.
+
 ## Debugging
 
 This template uses Ruby's official **debug** gem (standard since Ruby 3.1) instead of pry-rails:

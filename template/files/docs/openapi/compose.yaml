@@ -1,0 +1,36 @@
+name: api-docs
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      # Mount source for live editing (read-only)
+      - ./:/app:ro
+      # Persist nginx logs
+      - ./.srv/nginx/log:/var/log/nginx
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: no
+    command: tunnel --config /etc/cloudflared/config.yaml run
+    volumes:
+      - ./cloudflared-config.yaml:/etc/cloudflared/config.yaml:ro
+    secrets:
+      - cf_tunnel_token
+    profiles:
+      - cloudflare
+
+secrets:
+  cf_tunnel_token:
+    file: ./.secrets/cf_tunnel_token

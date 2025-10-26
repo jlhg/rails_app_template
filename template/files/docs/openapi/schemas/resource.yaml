@@ -1,0 +1,40 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+    description: Resource unique identifier (UUIDv7)
+    example: "018f4d9e-5c4a-7000-9f8b-3a4c5d6e7f8a"
+  name:
+    type: string
+    description: Resource name
+    example: "Example Resource"
+  description:
+    type: string
+    nullable: true
+    description: Resource description
+    example: "This is an example resource"
+  status:
+    type: string
+    enum:
+      - active
+      - inactive
+      - pending
+    description: Resource status
+    example: "active"
+  created_at:
+    type: string
+    format: date-time
+    description: Creation timestamp
+    example: "2025-01-15T10:30:00Z"
+  updated_at:
+    type: string
+    format: date-time
+    description: Last update timestamp
+    example: "2025-01-15T10:30:00Z"
+required:
+  - id
+  - name
+  - status
+  - created_at
+  - updated_at

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>API Documentation - Swagger UI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css">
+  </head>
+
+  <body>
+    <div id="swagger-ui"></div>
+  </body>
+
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js"></script>
+  <script>
+    var swaggerUIOptions = {
+      url: "./spec.yaml",
+      dom_id: '#swagger-ui',
+      docExpansion: 'list',
+      deepLinking: true,
+      filter: true,
+      presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+      ],
+      plugins: [
+        SwaggerUIBundle.plugins.DownloadUrl
+      ],
+    }
+
+    var ui = SwaggerUIBundle(swaggerUIOptions)
+
+    // Export to window for use in custom js
+    window.ui = ui
+  </script>
+</html>

@@ -1,0 +1,109 @@
+openapi: "3.1.0"
+
+info:
+  title: Your API Documentation
+  version: 1.0.0
+  description: |
+    API documentation for your application.
+
+    Replace this with your actual API description.
+
+servers:
+  - url: "http://localhost:3000"
+    description: Development server
+
+tags:
+  - name: Resources
+    description: Resource management endpoints
+
+paths:
+  /resources:
+    get:
+      tags:
+        - Resources
+      summary: List all resources
+      operationId: list_resources
+      parameters:
+        - $ref: "parameters/pagination.yaml#/page"
+        - $ref: "parameters/pagination.yaml#/per_page"
+      responses:
+        200:
+          $ref: "responses/success.yaml#/resources_list"
+        401:
+          $ref: "responses/error.yaml#/unauthorized"
+
+    post:
+      tags:
+        - Resources
+      summary: Create a new resource
+      operationId: create_resource
+      requestBody:
+        $ref: "request_bodies/resource.yaml#/create"
+      responses:
+        201:
+          $ref: "responses/success.yaml#/resource_created"
+        400:
+          $ref: "responses/error.yaml#/bad_request"
+        401:
+          $ref: "responses/error.yaml#/unauthorized"
+
+  /resources/{id}:
+    get:
+      tags:
+        - Resources
+      summary: Get a specific resource
+      operationId: get_resource
+      parameters:
+        - $ref: "parameters/id.yaml"
+      responses:
+        200:
+          $ref: "responses/success.yaml#/resource_detail"
+        404:
+          $ref: "responses/not_found.yaml"
+        401:
+          $ref: "responses/error.yaml#/unauthorized"
+
+    put:
+      tags:
+        - Resources
+      summary: Update a resource
+      operationId: update_resource
+      parameters:
+        - $ref: "parameters/id.yaml"
+      requestBody:
+        $ref: "request_bodies/resource.yaml#/update"
+      responses:
+        200:
+          $ref: "responses/success.yaml#/resource_updated"
+        400:
+          $ref: "responses/error.yaml#/bad_request"
+        404:
+          $ref: "responses/not_found.yaml"
+        401:
+          $ref: "responses/error.yaml#/unauthorized"
+
+    delete:
+      tags:
+        - Resources
+      summary: Delete a resource
+      operationId: delete_resource
+      parameters:
+        - $ref: "parameters/id.yaml"
+      responses:
+        204:
+          description: Resource deleted successfully
+        404:
+          $ref: "responses/not_found.yaml"
+        401:
+          $ref: "responses/error.yaml#/unauthorized"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+
+security:
+  - BearerAuth: []

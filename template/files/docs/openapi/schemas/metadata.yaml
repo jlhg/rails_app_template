@@ -1,0 +1,23 @@
+type: object
+properties:
+  total:
+    type: integer
+    description: Total number of items
+    example: 100
+  page:
+    type: integer
+    description: Current page number
+    example: 1
+  per_page:
+    type: integer
+    description: Items per page
+    example: 20
+  total_pages:
+    type: integer
+    description: Total number of pages
+    example: 5
+required:
+  - total
+  - page
+  - per_page
+  - total_pages

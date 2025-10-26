@@ -1,0 +1,36 @@
+# Version Control
+.git
+.gitignore
+.dockerignore
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker Files
+Dockerfile
+docker-compose.yaml
+docker-compose.yml
+docker-compose.*.yaml
+docker-compose.*.yml
+compose.yaml
+compose.yml
+compose.*.yaml
+compose.*.yml
+
+# Persistent data (logs, etc.)
+.srv/
+
+# Temporary files
+*.tmp
+*.bak
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md

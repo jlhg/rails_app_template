@@ -1,0 +1,54 @@
+create:
+  description: Request body for creating a new resource
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Resource name
+            example: "New Resource"
+          description:
+            type: string
+            nullable: true
+            description: Resource description
+            example: "Description of the new resource"
+          status:
+            type: string
+            enum:
+              - active
+              - inactive
+              - pending
+            description: Resource status
+            example: "active"
+        required:
+          - name
+          - status
+
+update:
+  description: Request body for updating an existing resource
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Resource name
+            example: "Updated Resource"
+          description:
+            type: string
+            nullable: true
+            description: Resource description
+            example: "Updated description"
+          status:
+            type: string
+            enum:
+              - active
+              - inactive
+              - pending
+            description: Resource status
+            example: "active"

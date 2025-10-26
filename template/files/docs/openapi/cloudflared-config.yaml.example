@@ -1,0 +1,172 @@
+# Cloudflare Tunnel Configuration for API Documentation
+# Copy this file to cloudflared-config.yaml and configure with your tunnel details
+#
+# IMPORTANT: This file should be committed (contains no secrets)
+# The actual credentials are stored in .secrets/cf_tunnel_token
+
+# ============================================================================
+# Tunnel Configuration
+# ============================================================================
+
+# Your Cloudflare Tunnel ID (get from: cloudflare.com/zero-trust/tunnels)
+# Example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+tunnel: YOUR_TUNNEL_ID_HERE
+
+# Tunnel credentials file path (inside container)
+# This is mounted from .secrets/cf_tunnel_token via Docker secrets
+credentials-file: /run/secrets/cf_tunnel_token
+
+# Metrics endpoint for health checks
+metrics: 0.0.0.0:41111
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+
+# Log level: trace, debug, info, warn, error, fatal
+loglevel: info
+
+# ============================================================================
+# Ingress Rules (Order matters - first match wins)
+# ============================================================================
+
+ingress:
+  # ---------------------------------------------------------------------------
+  # API Documentation Route
+  # ---------------------------------------------------------------------------
+  # Serves OpenAPI documentation (Swagger UI, ReDoc)
+  - hostname: api-docs.yourdomain.com
+    service: http://nginx:80
+    originRequest:
+      # Disable TLS verification (backend uses http, not https)
+      noTLSVerify: true
+
+      # Use HTTP/2 for better performance with static files
+      http2Origin: true
+
+      # Connection timeouts
+      connectTimeout: 10s
+
+      # Keep-alive settings
+      tcpKeepAlive: 30s
+      keepAliveTimeout: 30s
+
+  # ---------------------------------------------------------------------------
+  # Catch-all Rule (Required by Cloudflare Tunnel)
+  # ---------------------------------------------------------------------------
+  # This must be the last rule - returns 404 for unmatched requests
+  - service: http_status:404
+
+# ============================================================================
+# Configuration Notes
+# ============================================================================
+
+# 1. Tunnel ID Setup:
+#    - Go to: https://one.dash.cloudflare.com/
+#    - Navigate to: Access → Tunnels
+#    - Create a new tunnel or use existing one
+#    - Copy the Tunnel ID (UUID format)
+#    - Replace YOUR_TUNNEL_ID_HERE above
+
+# 2. Credentials File:
+#    - When you create a tunnel, Cloudflare generates a credentials JSON
+#    - Save this JSON to: .secrets/cf_tunnel_token
+#    - The file is automatically mounted to /run/secrets/cf_tunnel_token
+#    - Example format:
+#      {
+#        "AccountTag": "your-account-tag",
+#        "TunnelSecret": "your-tunnel-secret",
+#        "TunnelID": "your-tunnel-id"
+#      }
+
+# 3. DNS Configuration:
+#    - Go to Cloudflare Dashboard → Your Domain → DNS
+#    - Add CNAME record:
+#      Name: api-docs
+#      Target: your-tunnel-id.cfargotunnel.com
+#      Proxy status: Proxied (orange cloud)
+#    - Replace api-docs.yourdomain.com above with your actual domain
+
+# 4. Quick Setup:
+#    # Copy example files
+#    cp cloudflared-config.yaml.example cloudflared-config.yaml
+#    mkdir -p .secrets
+#
+#    # Save tunnel credentials to .secrets/cf_tunnel_token
+#    cat > .secrets/cf_tunnel_token << 'EOF'
+#    {
+#      "AccountTag": "your-account-tag",
+#      "TunnelSecret": "your-tunnel-secret",
+#      "TunnelID": "your-tunnel-id"
+#    }
+#    EOF
+#
+#    # Set proper permissions
+#    chmod 600 .secrets/cf_tunnel_token
+#
+#    # Update cloudflared-config.yaml with your tunnel ID and domain
+#
+#    # Start with cloudflare profile
+#    docker compose --profile cloudflare up -d
+
+# 5. Testing:
+#    # Check tunnel status
+#    docker compose logs cloudflared
+#
+#    # Test access
+#    curl https://api-docs.yourdomain.com
+#
+#    # View metrics
+#    docker compose exec cloudflared wget -qO- http://localhost:41111/metrics
+
+# 6. Multiple Environments:
+#    You can use different hostnames for different environments:
+#
+#    # Development
+#    - hostname: api-docs-dev.yourdomain.com
+#      service: http://nginx:80
+#
+#    # Staging
+#    - hostname: api-docs-staging.yourdomain.com
+#      service: http://nginx:80
+#
+#    # Production
+#    - hostname: api-docs.yourdomain.com
+#      service: http://nginx:80
+
+# 7. Security Best Practices:
+#    - Enable Cloudflare Access policies to restrict who can view documentation
+#    - Use Cloudflare WAF rules to protect against common attacks
+#    - Consider enabling IP allowlist if documentation is internal-only
+#    - Rotate tunnel credentials periodically
+#    - Monitor tunnel logs for suspicious activity
+
+# ============================================================================
+# Cloudflare Access (Optional but Recommended)
+# ============================================================================
+
+# To restrict access to your API documentation:
+# 1. Go to: Zero Trust → Access → Applications
+# 2. Add Application:
+#    - Name: API Documentation
+#    - Domain: api-docs.yourdomain.com
+#    - Identity Provider: Email, Google, GitHub, etc.
+# 3. Add Policy:
+#    - Name: Allow Employees
+#    - Action: Allow
+#    - Include: Emails ending in @yourcompany.com
+#
+# This adds authentication before users can view documentation
+
+# ============================================================================
+# Troubleshooting
+# ============================================================================
+
+# Issue: Tunnel not connecting
+# Solution: Check tunnel credentials are correct, verify tunnel ID matches
+
+# Issue: 404 errors
+# Solution: Ensure DNS CNAME is set up correctly, check hostname in config
+
+# Issue: nginx service not reachable
+# Solution: Verify nginx container is running, check Docker network connectivity

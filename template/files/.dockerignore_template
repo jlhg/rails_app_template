@@ -37,6 +37,9 @@
 /spec/
 /coverage/
 
+# Ignore documentation (OpenAPI docs run as separate service)
+/docs/
+
 # Ignore CI service files
 /.github
 

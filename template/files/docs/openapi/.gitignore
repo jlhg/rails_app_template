@@ -1,0 +1,25 @@
+# Persistent data directory
+.srv/
+
+# Secrets (never commit actual secrets)
+.secrets/
+!.secrets/*.example
+!.secrets/README.md
+
+# Cloudflare Tunnel configuration (contains tunnel ID)
+cloudflared-config.yaml
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db

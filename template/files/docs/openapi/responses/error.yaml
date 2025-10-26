@@ -1,0 +1,21 @@
+bad_request:
+  description: Bad request - validation error or invalid parameters
+  content:
+    application/json:
+      schema:
+        $ref: "../schemas/error.yaml"
+      example:
+        error: "validation_error"
+        message: "The provided data is invalid"
+        details:
+          name: "cannot be blank"
+
+unauthorized:
+  description: Unauthorized - authentication required or invalid token
+  content:
+    application/json:
+      schema:
+        $ref: "../schemas/error.yaml"
+      example:
+        error: "unauthorized"
+        message: "Authentication required"

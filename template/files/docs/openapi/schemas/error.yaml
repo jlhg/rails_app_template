@@ -1,0 +1,20 @@
+type: object
+properties:
+  error:
+    type: string
+    description: Error type
+    example: "validation_error"
+  message:
+    type: string
+    description: Human-readable error message
+    example: "Validation failed for the provided data"
+  details:
+    type: object
+    nullable: true
+    description: Additional error details
+    example:
+      field: "name"
+      issue: "cannot be blank"
+required:
+  - error
+  - message
