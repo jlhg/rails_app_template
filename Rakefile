@@ -5,13 +5,13 @@ task :rubocop, [:mode] do |_t, args|
   mode = args[:mode]
   fix_flag = mode == "fix" ? "-A" : ""
 
-  puts "🔍 Checking rails_app_template files..."
+  puts "Checking rails_app_template files..."
   sh "rubocop #{fix_flag}"
 
-  puts "\n🔍 Checking template files..."
+  puts "\nChecking template files..."
   sh "rubocop #{fix_flag} -c template/files/.rubocop.yml template/files/ recipe/rspec/support/"
 
-  puts "\n✅ All checks complete!"
+  puts "\nAll checks complete!"
 end
 
 namespace :rubocop do
@@ -20,7 +20,7 @@ namespace :rubocop do
     mode = args[:mode]
     fix_flag = mode == "fix" ? "-A" : ""
 
-    puts "🔍 Checking rails_app_template files..."
+    puts "Checking rails_app_template files..."
     sh "rubocop #{fix_flag}"
   end
 
@@ -29,7 +29,7 @@ namespace :rubocop do
     mode = args[:mode]
     fix_flag = mode == "fix" ? "-A" : ""
 
-    puts "🔍 Checking template files..."
+    puts "Checking template files..."
     sh "rubocop #{fix_flag} -c template/files/.rubocop.yml template/files/ recipe/rspec/support/"
   end
 end
@@ -38,7 +38,7 @@ desc "Show available rake tasks"
 task :help do
   puts <<~HELP
 
-    📋 Available Rake Tasks:
+    Available Rake Tasks:
 
     Code Style Checking (RuboCop):
       rake rubocop              # Check all files (app + template)

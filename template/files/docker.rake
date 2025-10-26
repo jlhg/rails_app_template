@@ -46,10 +46,10 @@ namespace :docker do
     revision = git_revision
 
     if revision.empty?
-      puts "⚠️  Warning: No git repository found, building without REVISION"
+      puts "Warning: No git repository found, building without REVISION"
       docker_compose("build", env)
     else
-      puts "📦 Building Docker image with REVISION=#{revision}"
+      puts "Building Docker image with REVISION=#{revision}"
       sh "REVISION=#{revision} docker compose #{compose_files(env)} build"
     end
   end
@@ -57,25 +57,25 @@ namespace :docker do
   desc "Start containers (usage: rake docker:up or docker:up[local])"
   task :up, [:env] => :environment do |_t, args|
     env = args[:env]
-    puts "🚀 Starting containers..."
+    puts "Starting containers..."
     docker_compose("up -d", env)
-    puts "✅ Containers started. Run 'rake docker:logs' to view logs"
+    puts "Containers started. Run 'rake docker:logs' to view logs"
   end
 
   desc "Stop and remove containers"
   task :down, [:env] => :environment do |_t, args|
     env = args[:env]
-    puts "🛑 Stopping containers..."
+    puts "Stopping containers..."
     docker_compose("down", env)
-    puts "✅ Containers stopped"
+    puts "Containers stopped"
   end
 
   desc "Restart containers"
   task :restart, [:env] => :environment do |_t, args|
     env = args[:env]
-    puts "🔄 Restarting containers..."
+    puts "Restarting containers..."
     docker_compose("restart", env)
-    puts "✅ Containers restarted"
+    puts "Containers restarted"
   end
 
   desc "View container logs (usage: docker:logs or docker:logs[local,web])"
@@ -106,17 +106,17 @@ namespace :docker do
   desc "Run database migrations"
   task :migrate, [:env] => :environment do |_t, args|
     env = args[:env]
-    puts "🗄️  Running database migrations..."
+    puts "Running database migrations..."
     docker_compose("exec web bundle exec rails db:migrate", env)
   end
 
   desc "Initial setup (create secrets, prepare database)"
   task setup: :environment do
-    puts "🔧 Running initial setup..."
+    puts "Running initial setup..."
 
     # Check if .secrets directory exists
     unless Dir.exist?(".secrets")
-      puts "❌ Error: .secrets directory not found"
+      puts "Error: .secrets directory not found"
       puts "Please create .secrets directory first"
       exit 1
     end
@@ -134,7 +134,7 @@ namespace :docker do
       secret_file = ".secrets/#{secret}"
       next if File.exist?(secret_file)
 
-      puts "📝 Generating #{secret}..."
+      puts "Generating #{secret}..."
       if secret == "rails_secret_key_base"
         # Generate Rails secret
         secret_value = `bundle exec rails secret 2>/dev/null`.strip
@@ -149,16 +149,16 @@ namespace :docker do
 
       File.write(secret_file, secret_value)
       File.chmod(0o640, secret_file)
-      puts "✅ Created #{secret_file}"
+      puts "Created #{secret_file}"
     end
 
     # Set proper permissions
-    puts "🔒 Setting proper permissions..."
+    puts "Setting proper permissions..."
     sh "chmod 700 .secrets"
     sh "chmod 640 .secrets/*_password .secrets/*_base 2>/dev/null || true"
 
     puts ""
-    puts "✅ Setup complete!"
+    puts "Setup complete!"
     puts ""
     puts "Next steps:"
     puts "  1. rake docker:build          # Build Docker image"
@@ -169,13 +169,13 @@ namespace :docker do
   desc "Clean up everything (DANGEROUS: removes volumes)"
   task :clean, [:env] => :environment do |_t, args|
     env = args[:env]
-    print "⚠️  This will remove all containers, volumes, and data. Continue? (y/N): "
+    print "Warning: This will remove all containers, volumes, and data. Continue? (y/N): "
     response = $stdin.gets.chomp
     if response.downcase == "y"
-      puts "🧹 Cleaning up..."
+      puts "Cleaning up..."
       docker_compose("down -v", env)
       sh "rm -rf .srv" if Dir.exist?(".srv")
-      puts "✅ Cleanup complete"
+      puts "Cleanup complete"
     else
       puts "Cancelled"
     end
@@ -186,9 +186,9 @@ namespace :docker do
     desc "Prepare database (create + migrate)"
     task :prepare, [:env] => :environment do |_t, args|
       env = args[:env]
-      puts "🗄️  Preparing database..."
+      puts "Preparing database..."
       sh "RAILS_DB_PREPARE=true docker compose #{compose_files(env)} restart web"
-      puts "✅ Database prepared"
+      puts "Database prepared"
     end
 
     desc "Create database"
@@ -200,7 +200,7 @@ namespace :docker do
     desc "Drop database"
     task :drop, [:env] => :environment do |_t, args|
       env = args[:env]
-      print "⚠️  This will delete all data. Continue? (y/N): "
+      print "Warning: This will delete all data. Continue? (y/N): "
       response = $stdin.gets.chomp
       if response.downcase == "y"
         docker_compose("exec web bundle exec rails db:drop", env)
@@ -212,7 +212,7 @@ namespace :docker do
     desc "Reset database (drop + create + migrate)"
     task :reset, [:env] => :environment do |_t, args|
       env = args[:env]
-      print "⚠️  This will delete all data and recreate database. Continue? (y/N): "
+      print "Warning: This will delete all data and recreate database. Continue? (y/N): "
       response = $stdin.gets.chomp
       if response.downcase == "y"
         docker_compose("exec web bundle exec rails db:reset", env)
@@ -240,7 +240,7 @@ namespace :docker do
       env = args[:env]
       command = args[:command] || ""
       if command.empty?
-        puts "❌ Error: Please provide a command"
+        puts "Error: Please provide a command"
         puts "Usage: rake docker:rails:run[local,'db:migrate']"
         exit 1
       end

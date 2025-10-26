@@ -8,13 +8,13 @@
 # - Enables YJIT for better performance
 #
 # Supported environments:
-# ✅ production  - Full production deployment
-# ✅ staging     - Staging environment (uses same production gems)
-# ✅ demo        - Demo/preview environments
+# - production  - Full production deployment
+# - staging     - Staging environment (uses same production gems)
+# - demo        - Demo/preview environments
 #
 # NOT suitable for:
-# ❌ development - Missing development gems (pry, spring, etc.)
-# ❌ test        - Missing test gems (rspec, factory_bot, etc.)
+# - development - Missing development gems (pry, spring, etc.)
+# - test        - Missing test gems (rspec, factory_bot, etc.)
 #
 # For local development, use compose.local.yaml with volume mounts:
 #   services:

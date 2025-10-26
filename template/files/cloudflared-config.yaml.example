@@ -139,14 +139,14 @@ ingress:
 # Security Best Practices
 # ============================================================================
 
-# ✅ DO:
+# DO:
 # - Use this config file (committed, no secrets)
 # - Store tunnel credentials in .secrets/cf_tunnel_token (gitignored)
 # - Set proper hostname restrictions
 # - Enable Cloudflare Access policies for additional protection
 # - Monitor tunnel metrics at metrics:41111/metrics
 
-# ❌ DON'T:
+# DON'T:
 # - Don't put credentials in this file (use credentials-file)
 # - Don't use catch-all hostname (* or missing hostname)
 # - Don't disable noTLSVerify in production if using https backend

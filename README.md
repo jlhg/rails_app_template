@@ -154,12 +154,12 @@ Completed 200 OK in 45ms (Views: 12.3ms | ActiveRecord: 23.4ms)
 ```
 
 **Key features:**
-- ✅ Single-line JSON logs (production only)
-- ✅ Includes `request_id`, `user_id`, `ip` for tracing
-- ✅ Health check requests (`/up`) automatically silenced
-- ✅ Human-readable colorized logs in development
-- ✅ Configurable log level via `LOG_LEVEL` environment variable (default: `info`)
-- ✅ Output to STDOUT (Docker captures and manages logs)
+- Single-line JSON logs (production only)
+- Includes `request_id`, `user_id`, `ip` for tracing
+- Health check requests (`/up`) automatically silenced
+- Human-readable colorized logs in development
+- Configurable log level via `LOG_LEVEL` environment variable (default: `info`)
+- Output to STDOUT (Docker captures and manages logs)
 
 **Health check silencing:**
 
@@ -177,12 +177,12 @@ This prevents `/up` requests from flooding your logs with noise, keeping focus o
 This template includes **Sentry** for real-time error tracking and performance monitoring in production.
 
 **Key Features:**
-- ✅ Automatic exception capture with detailed stack traces
-- ✅ Performance monitoring (APM) for API endpoints, database queries, external requests
-- ✅ Release tracking (correlate errors with deployments)
-- ✅ Smart alerting and notifications
-- ✅ Breadcrumbs (action trail leading to errors)
-- ✅ Issue trends and analytics
+- Automatic exception capture with detailed stack traces
+- Performance monitoring (APM) for API endpoints, database queries, external requests
+- Release tracking (correlate errors with deployments)
+- Smart alerting and notifications
+- Breadcrumbs (action trail leading to errors)
+- Issue trends and analytics
 
 **Configuration:**
 ```bash
@@ -363,10 +363,10 @@ curl http://localhost:3000
 ### Services Configuration
 
 **All services include:**
-- ✅ Health checks (30s interval, 10s timeout, 10 retries)
-- ✅ Restart policy: `unless-stopped`
-- ✅ Persistent volumes in `./.srv/`
-- ✅ **Docker secrets for all sensitive data**
+- Health checks (30s interval, 10s timeout, 10 retries)
+- Restart policy: `unless-stopped`
+- Persistent volumes in `./.srv/`
+- **Docker secrets for all sensitive data**
 
 **Services:**
 - **web** - Rails 8.1 API (port 3000) + **YJIT enabled** + ActionCable WebSocket
@@ -378,13 +378,13 @@ curl http://localhost:3000
 
 ### Security Features
 
-**🔒 All sensitive data uses Docker secrets:**
-- ✅ PostgreSQL password
-- ✅ Redis Cache password (redis_cache)
-- ✅ Redis Cable password (redis_cable)
-- ✅ Redis Session password (redis_session)
-- ✅ Rails SECRET_KEY_BASE
-- ✅ Cloudflare Tunnel token
+**All sensitive data uses Docker secrets:**
+- PostgreSQL password
+- Redis Cache password (redis_cache)
+- Redis Cable password (redis_cable)
+- Redis Session password (redis_session)
+- Rails SECRET_KEY_BASE
+- Cloudflare Tunnel token
 
 **Secrets are mounted at `/run/secrets/` inside containers (not in environment variables)**
 
@@ -465,11 +465,11 @@ docker compose --profile cloudflare up -d
 ```
 
 **Key features:**
-- ✅ No exposed ports or public IP needed
-- ✅ Automatic SSL/TLS termination
-- ✅ **WebSocket support** for ActionCable real-time features
-- ✅ Built-in DDoS protection
-- ✅ Free tier available
+- No exposed ports or public IP needed
+- Automatic SSL/TLS termination
+- **WebSocket support** for ActionCable real-time features
+- Built-in DDoS protection
+- Free tier available
 
 **WebSocket limitations:**
 - Free plan: 100s timeout (ActionCable auto-reconnects)
@@ -559,10 +559,10 @@ environment:
 ```
 
 **Separation of Concerns:**
-- 🎯 **App code**: Only checks if `*_FILE` env var is set (no path assumptions)
-- 🐳 **Docker config**: Sets `/run/secrets/*` paths (deployment-specific)
-- ☸️ **Kubernetes config**: Can override with `/etc/secrets/*` paths
-- 🧪 **Testing**: Can use any custom path
+- **App code**: Only checks if `*_FILE` env var is set (no path assumptions)
+- **Docker config**: Sets `/run/secrets/*` paths (deployment-specific)
+- **Kubernetes config**: Can override with `/etc/secrets/*` paths
+- **Testing**: Can use any custom path
 
 **Supported `*_FILE` environment variables:**
 - `DATABASE_PASSWORD_FILE` - Database password file path
@@ -572,19 +572,19 @@ environment:
 - `SECRET_KEY_BASE_FILE` - Rails secret key file path
 
 **Benefits:**
-- ✅ Secrets never appear in `docker inspect` output
-- ✅ Secrets not visible to other processes
-- ✅ No accidental logging of environment variables
-- ✅ **App code agnostic to deployment method** (Docker, Kubernetes, bare metal)
-- ✅ **Deployment config owns secret paths** (not hardcoded in app)
-- ✅ Similar to PostgreSQL's official `DATABASE_PASSWORD_FILE` pattern
+- Secrets never appear in `docker inspect` output
+- Secrets not visible to other processes
+- No accidental logging of environment variables
+- **App code agnostic to deployment method** (Docker, Kubernetes, bare metal)
+- **Deployment config owns secret paths** (not hardcoded in app)
+- Similar to PostgreSQL's official `DATABASE_PASSWORD_FILE` pattern
 
 **Configuration Philosophy:**
 
 | File | Purpose | Scope | Customization |
 |------|---------|-------|---------------|
-| **`.env`** | Application config | Any deployment | ✅ Environment variables |
-| **`compose.yaml`** | Docker orchestration | Docker Compose only | ✅ Edit file or override |
+| **`.env`** | Application config | Any deployment | Environment variables |
+| **`compose.yaml`** | Docker orchestration | Docker Compose only | Edit file or override |
 
 **Application Config (`.env`):**
 - Deployment-agnostic (works with Docker, K8s, bare metal)
@@ -615,11 +615,11 @@ secrets:
 ```bash
 # Automatically merged with compose.yaml
 docker compose up -d
-# ✅ Reads: compose.yaml + compose.override.yaml
+# Reads: compose.yaml + compose.override.yaml
 
 # IMPORTANT: Does NOT work with -f flag
 docker compose -f compose.yaml up -d
-# ❌ Only reads: compose.yaml (override ignored!)
+# Only reads: compose.yaml (override ignored!)
 ```
 
 **Option 2: Edit compose.yaml directly**
@@ -676,10 +676,10 @@ docker compose restart web
 ```
 
 **When to set `RAILS_DB_PREPARE=true`:**
-- ✅ First deployment (create database)
-- ✅ After running migrations locally
-- ✅ After pulling schema changes
-- ❌ Normal application restarts (waste of time)
+- First deployment (create database)
+- After running migrations locally
+- After pulling schema changes
+- NOT for normal application restarts (waste of time)
 
 **Custom Secret Paths (No App Code Changes):**
 
@@ -791,12 +791,12 @@ docker compose exec web rails runner 'puts RubyVM::YJIT.enabled?'
 
 | File | Purpose | Committed | Auto-loaded |
 |------|---------|-----------|-------------|
-| `compose.yaml` | Base configuration | ✅ Yes | ✅ Yes |
-| `compose.production.yaml` | Production overrides | ✅ Yes | ❌ No |
-| `compose.staging.yaml` | Staging overrides | ✅ Yes | ❌ No |
-| `compose.dev.yaml` | Shared dev config | ✅ Yes | ❌ No |
-| `compose.override.yaml` | Personal overrides | ❌ No (gitignored) | ✅ Yes |
-| `compose.local.yaml` | Personal explicit | ❌ No (gitignored) | ❌ No |
+| `compose.yaml` | Base configuration | Yes | Yes |
+| `compose.production.yaml` | Production overrides | Yes | No |
+| `compose.staging.yaml` | Staging overrides | Yes | No |
+| `compose.dev.yaml` | Shared dev config | Yes | No |
+| `compose.override.yaml` | Personal overrides | No (gitignored) | Yes |
+| `compose.local.yaml` | Personal explicit | No (gitignored) | No |
 
 **Usage:**
 
@@ -869,17 +869,17 @@ This template uses **Valkey 8** (100% Redis-compatible, fully open source) with 
 ### Why Three Separate Instances?
 
 **Problem with single Redis:**
-- ❌ **Eviction conflicts**: Cache needs LRU eviction, sessions cannot be evicted
-- ❌ **FLUSHDB risk**: Clearing cache (`FLUSHDB`) would delete sessions
-- ❌ **Monitoring difficulty**: Cannot track memory usage per use case
-- ❌ **Fault isolation**: Cache failure affects sessions
+- **Eviction conflicts**: Cache needs LRU eviction, sessions cannot be evicted
+- **FLUSHDB risk**: Clearing cache (`FLUSHDB`) would delete sessions
+- **Monitoring difficulty**: Cannot track memory usage per use case
+- **Fault isolation**: Cache failure affects sessions
 
 **Benefits of separation:**
-- ✅ **Different eviction policies**: Cache can evict old data, sessions are protected
-- ✅ **Different persistence needs**: Sessions persisted to disk, cache is ephemeral
-- ✅ **Fault isolation**: Cache failure doesn't affect WebSocket or sessions
-- ✅**Independent scaling**: Scale cache vs sessions separately based on usage
-- ✅ **Clear monitoring**: Track memory, hit rate, connections per instance
+- **Different eviction policies**: Cache can evict old data, sessions are protected
+- **Different persistence needs**: Sessions persisted to disk, cache is ephemeral
+- **Fault isolation**: Cache failure doesn't affect WebSocket or sessions
+- **Independent scaling**: Scale cache vs sessions separately based on usage
+- **Clear monitoring**: Track memory, hit rate, connections per instance
 
 ### Configuration Examples
 
@@ -920,7 +920,7 @@ This template uses **UUIDv7** as the default primary key type for all database t
 **Business Intelligence Leakage Risk:**
 
 ```ruby
-# ❌ Problem: Sequential integer IDs expose business data
+# Problem: Sequential integer IDs expose business data
 GET /api/orders/12345  # → Reveals: "~12,345 total orders"
 
 # One week later
@@ -928,9 +928,9 @@ GET /api/orders/12850  # → Reveals: "~500 orders/week growth"
 ```
 
 **Competitors can:**
-- 📊 Estimate your business scale
-- 📈 Track your growth/decline rate
-- 🔍 Perform enumeration attacks
+- Estimate your business scale
+- Track your growth/decline rate
+- Perform enumeration attacks
 
 ### UUIDv7: Security + Performance
 
@@ -940,7 +940,7 @@ GET /api/orders/12850  # → Reveals: "~500 orders/week growth"
 │ Type     │ Time     │ Relative       │
 ├──────────┼──────────┼────────────────┤
 │ bigint   │ 290 sec  │ 100% (baseline)│
-│ UUIDv7   │ 290 sec  │ 100% ✅ SAME!  │
+│ UUIDv7   │ 290 sec  │ 100% SAME!     │
 │ UUIDv4   │ 375 sec  │ 77% (slower)   │
 └──────────┴──────────┴────────────────┘
 ```
@@ -994,11 +994,11 @@ This template provides comprehensive documentation for implementing access token
 3. **Logout**: Delete from both Redis and PostgreSQL
 
 **Benefits:**
-- ⚡ **Fast**: 95%+ requests served from Redis (< 1ms)
-- 🔒 **Reliable**: PostgreSQL ensures no data loss
-- 🚀 **Scalable**: Redis handles high request rates
-- 📊 **Auditable**: PostgreSQL tracks token history
-- 🛡️ **Recoverable**: Works even if Redis fails
+- **Fast**: 95%+ requests served from Redis (< 1ms)
+- **Reliable**: PostgreSQL ensures no data loss
+- **Scalable**: Redis handles high request rates
+- **Auditable**: PostgreSQL tracks token history
+- **Recoverable**: Works even if Redis fails
 
 ### Why Not JWT-only?
 
@@ -1007,7 +1007,7 @@ This template provides comprehensive documentation for implementing access token
 ```
 User: "My account was hacked!"
 You: "I'll revoke all sessions immediately"
-Reality: ❌ Cannot revoke JWT tokens
+Reality: Cannot revoke JWT tokens
 Hacker: Still has valid JWT for next 24 hours
 ```
 
@@ -1015,8 +1015,8 @@ Hacker: Still has valid JWT for next 24 hours
 
 ```
 Redis crashes/restarts
-→ All 10,000 active users: ❌ Logged out immediately
-→ Support tickets: 📈📈📈
+→ All 10,000 active users: Logged out immediately
+→ Support tickets: Surge in complaints
 → Lost all session data forever
 ```
 
@@ -1063,9 +1063,9 @@ This template includes **rack-attack** gem for API rate limiting, but **does not
 - Resource-intensive endpoints (different endpoints need different limits)
 
 **Risks of default configuration:**
-- ❌ Too strict: False positives blocking legitimate users
-- ❌ Too loose: Cannot defend against attacks
-- ❌ One-size-fits-all: Not suitable for all scenarios
+- Too strict: False positives blocking legitimate users
+- Too loose: Cannot defend against attacks
+- One-size-fits-all: Not suitable for all scenarios
 
 ### Configuration Required
 
@@ -1162,10 +1162,10 @@ end
 ```
 
 **Why not use request_store gem?**
-- ✅ Built-in feature since Rails 5.2+
-- ✅ Type safe (attribute vs Hash)
-- ✅ Officially maintained and supported
-- ✅ No additional dependencies
+- Built-in feature since Rails 5.2+
+- Type safe (attribute vs Hash)
+- Officially maintained and supported
+- No additional dependencies
 
 ## Input Normalization
 
@@ -1174,9 +1174,9 @@ User input often contains **unexpected leading/trailing whitespace**, requiring 
 ### Common Issues
 
 **Consequences of not handling whitespace:**
-- ❌ Search failures: `User.find_by(email: "john@example.com")` won't find `" john@example.com "`
-- ❌ Duplicate data: `"John"` and `" John "` treated as different values
-- ❌ Validation errors: uniqueness validation can't prevent both `"user"` and `" user "`
+- Search failures: `User.find_by(email: "john@example.com")` won't find `" john@example.com "`
+- Duplicate data: `"John"` and `" John "` treated as different values
+- Validation errors: uniqueness validation can't prevent both `"user"` and `" user "`
 
 ### Rails 7.1+ normalizes (Recommended)
 
@@ -1206,7 +1206,7 @@ user = User.create!(email: " JOHN@EXAMPLE.COM ")
 
 # Query automatically normalized
 User.find_by(email: "  JOHN@EXAMPLE.COM  ")
-# → Automatically converts query condition, finds user ✅
+# → Automatically converts query condition, finds user
 ```
 
 ## N+1 Query Detection (Prosopite)
@@ -1216,10 +1216,10 @@ This template uses **Prosopite** to automatically detect N+1 queries in RSpec te
 ### Why Detect in Tests?
 
 **Advantages of detection in tests:**
-- ✅ Ensures test-covered code has no N+1 issues
-- ✅ Doesn't interfere with normal development requests
-- ✅ Automatically fails in CI/CD, preventing N+1 from reaching production
-- ✅ Developers can selectively run specific tests for detection
+- Ensures test-covered code has no N+1 issues
+- Doesn't interfere with normal development requests
+- Automatically fails in CI/CD, preventing N+1 from reaching production
+- Developers can selectively run specific tests for detection
 
 **Configuration:**
 ```ruby
@@ -1250,10 +1250,10 @@ RSpec.describe "GET /api/users", type: :request do
   it "lists all users with post counts" do
     get "/api/users"
 
-    # ❌ If controller has N+1 query, test will fail
+    # If controller has N+1 query, test will fail
     # users.each { |u| u.posts.count }  # N+1 detected!
 
-    # ✅ Correct approach: use eager loading
+    # Correct approach: use eager loading
     # User.includes(:posts)
 
     expect(response).to have_http_status(:ok)
@@ -1266,10 +1266,10 @@ end
 # app/controllers/api/users_controller.rb
 class Api::UsersController < ApplicationController
   def index
-    # ❌ N+1 query
+    # N+1 query (bad)
     # @users = User.all
 
-    # ✅ Eager loading
+    # Eager loading (good)
     @users = User.includes(:posts)
 
     render json: @users
@@ -1296,21 +1296,21 @@ end
 
 **1. Use eager loading (includes):**
 ```ruby
-# ❌ N+1 query
+# N+1 query (bad)
 @users = User.all
 @users.each { |u| u.posts.count }
 
-# ✅ Eager loading
+# Eager loading (good)
 @users = User.includes(:posts).all
 @users.each { |u| u.posts.count }
 ```
 
 **2. Use counter cache:**
 ```ruby
-# ❌ Query every time
+# Query every time (bad)
 user.posts.count
 
-# ✅ Counter cache
+# Counter cache (good)
 class Post < ApplicationRecord
   belongs_to :user, counter_cache: true
 end
@@ -1319,28 +1319,28 @@ user.posts_count  # No query!
 
 **3. Load only needed columns (select):**
 ```ruby
-# ❌ Load all columns
+# Load all columns (bad)
 User.all
 
-# ✅ Load only needed data
+# Load only needed data (good)
 User.select(:id, :name, :email)
 ```
 
 **4. Use pluck for simple data extraction:**
 ```ruby
-# ❌ Instantiate AR objects
+# Instantiate AR objects (bad)
 User.all.map(&:email)
 
-# ✅ Direct SQL, no AR overhead
+# Direct SQL, no AR overhead (good)
 User.pluck(:email)
 ```
 
 **5. Batch process large datasets:**
 ```ruby
-# ❌ Load all records
+# Load all records (bad)
 User.all.each { |u| process(u) }
 
-# ✅ Batch processing (1000 per batch)
+# Batch processing (1000 per batch, good)
 User.find_each(batch_size: 1000) { |u| process(u) }
 ```
 

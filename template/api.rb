@@ -12,7 +12,7 @@ ruby_version = Gem::Version.new(RUBY_VERSION)
 required_version = Gem::Version.new("3.4.0")
 
 if ruby_version < required_version
-  say "⚠️  Warning: This template is optimized for Ruby 3.4+", :yellow
+  say "Warning: This template is optimized for Ruby 3.4+", :yellow
   say "   Current Ruby version: #{RUBY_VERSION}", :yellow
   say "   Please consider upgrading to Ruby 3.4 or later", :yellow
 end

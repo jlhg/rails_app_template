@@ -5,13 +5,13 @@
 This is a **Rails 8 application template project** for quickly creating Rails API projects following best practices.
 
 **Key Features:**
-- ✅ Rails 8.1 + Ruby 3.4 optimizations (YJIT enabled)
-- ✅ API-only architecture (PostgreSQL 18, Valkey 8)
-- ✅ UUIDv7 primary keys (bigint-level performance, prevents business intel leakage)
-- ✅ Production-grade Docker configuration (multi-stage build, secrets management)
-- ✅ Structured logging (Lograge)
-- ✅ Complete test configuration (RSpec, FactoryBot, N+1 detection)
-- ✅ Security best practices (Rack::Attack, Pundit, JWT)
+- Rails 8.1 + Ruby 3.4 optimizations (YJIT enabled)
+- API-only architecture (PostgreSQL 18, Valkey 8)
+- UUIDv7 primary keys (bigint-level performance, prevents business intel leakage)
+- Production-grade Docker configuration (multi-stage build, secrets management)
+- Structured logging (Lograge)
+- Complete test configuration (RSpec, FactoryBot, N+1 detection)
+- Security best practices (Rack::Attack, Pundit, JWT)
 
 **Usage:**
 ```bash
@@ -252,11 +252,11 @@ EOF
 ```
 
 **Checklist:**
-- ✅ No gem duplication warnings
-- ✅ No gem not found errors
-- ✅ bundle install succeeds
-- ✅ Generated files correct (check config/, spec/, Dockerfile, etc.)
-- ✅ RuboCop passes (if .rubocop.yml modified)
+- No gem duplication warnings
+- No gem not found errors
+- bundle install succeeds
+- Generated files correct (check config/, spec/, Dockerfile, etc.)
+- RuboCop passes (if .rubocop.yml modified)
 
 ## Common Tasks
 
@@ -354,21 +354,21 @@ end
 ```
 
 **Key benefits:**
-- ✅ Same performance as bigint (290s = 290s for 1M inserts)
-- ✅ Prevents business intelligence leakage (competitor can't see order count)
-- ✅ PostgreSQL 18 native support (no extra gems needed)
-- ✅ Time-ordered (excellent B-tree index locality)
+- Same performance as bigint (290s = 290s for 1M inserts)
+- Prevents business intelligence leakage (competitor can't see order count)
+- PostgreSQL 18 native support (no extra gems needed)
+- Time-ordered (excellent B-tree index locality)
 
 **Configuration:**
 - Configuration: `recipe/uuidv7.rb`
 
 ## Considerations and Common Pitfalls
 
-### ⚠️ 1. Gem Loading Order
+### Gem Loading Order
 
 **Wrong: init_gem inside recipe**
 ```ruby
-# ❌ recipe/config/log.rb (wrong)
+# recipe/config/log.rb (wrong)
 init_gem "lograge"  # Will error: gem not found
 
 environment "config.lograge.enabled = true", env: "production"
@@ -376,7 +376,7 @@ environment "config.lograge.enabled = true", env: "production"
 
 **Correct: init_gem in main coordinator**
 ```ruby
-# ✅ recipe/config.rb (correct)
+# recipe/config.rb (correct)
 init_gem "lograge"  # Initialize here
 
 recipe "config/log"  # Then execute configuration
@@ -384,12 +384,12 @@ recipe "config/log"  # Then execute configuration
 
 **Reason:** `init_gem` executes `gem "..."` command, must complete before `bundle install`. Recipe executes when gem may not yet be installed.
 
-### ⚠️ 2. Rails 8.1 Default Gems
+### Rails 8.1 Default Gems
 
 **Checklist:**
-- ✅ `debug` gem - Rails 8.1 includes by default, don't install duplicate
-- ✅ `config.silence_healthcheck_path = "/up"` - Rails 8.1 default config, don't duplicate
-- ✅ Solid Queue, Solid Cache - Rails 8+ additions, evaluate if needed
+- `debug` gem - Rails 8.1 includes by default, don't install duplicate
+- `config.silence_healthcheck_path = "/up"` - Rails 8.1 default config, don't duplicate
+- Solid Queue, Solid Cache - Rails 8+ additions, evaluate if needed
 
 **Verification:**
 ```bash
@@ -403,7 +403,7 @@ grep "gem 'debug'" rails8_1_check/Gemfile
 grep "silence_healthcheck_path" rails8_1_check/config/environments/production.rb
 ```
 
-### ⚠️ 3. Duplicate Gem Installation
+### Duplicate Gem Installation
 
 **Problem:** Multiple recipes call same `init_gem`
 
@@ -413,14 +413,14 @@ grep "silence_healthcheck_path" rails8_1_check/config/environments/production.rb
 
 **Example:**
 ```ruby
-# ✅ recipe/config.rb (coordinator)
+# recipe/config.rb (coordinator)
 init_gem "rack-cors"  # Initialize only once here
 
 recipe "config/cors"
 recipe "action_storage"  # This recipe also needs rack-cors, but don't repeat init_gem
 ```
 
-### ⚠️ 4. Environment Configuration Location
+### Environment Configuration Location
 
 **Rules:**
 - **Production environment config** → `environment "...", env: "production"`
@@ -430,19 +430,19 @@ recipe "action_storage"  # This recipe also needs rack-cors, but don't repeat in
 
 **Example:**
 ```ruby
-# ✅ Correct: Lograge only enabled in production
+# Correct: Lograge only enabled in production
 environment <<~RUBY, env: "production"
   config.lograge.enabled = true
   config.lograge.formatter = Lograge::Formatters::Json.new
 RUBY
 
-# ✅ Correct: Settings needed in all environments
+# Correct: Settings needed in all environments
 environment <<~RUBY
   config.time_zone = ENV.fetch('TIME_ZONE', 'Asia/Taipei')
 RUBY
 ```
 
-### ⚠️ 5. Documentation Synchronization
+### Documentation Synchronization
 
 **Rule:** When modifying features, must synchronize related documentation
 
@@ -451,17 +451,17 @@ RUBY
 2. gem/<gem_name>.rb comment descriptions
 3. CLAUDE.md (this file) if development conventions changed
 
-### ⚠️ 6. Secrets and Sensitive Data
+### Secrets and Sensitive Data
 
 **Never:**
-- ❌ Use real passwords in example files
-- ❌ Include real API keys in documentation
-- ❌ Commit `.env` or `.secrets/*` (non-.example files)
+- Use real passwords in example files
+- Include real API keys in documentation
+- Commit `.env` or `.secrets/*` (non-.example files)
 
 **Correct approach:**
-- ✅ Use `.example` suffix (will be copied but doesn't contain real values)
-- ✅ Documentation examples use `YOUR_TOKEN_HERE` etc. placeholders
-- ✅ `.gitignore` includes all sensitive file patterns
+- Use `.example` suffix (will be copied but doesn't contain real values)
+- Documentation examples use `YOUR_TOKEN_HERE` etc. placeholders
+- `.gitignore` includes all sensitive file patterns
 
 ## Git Commit Conventions
 
@@ -534,14 +534,14 @@ EOF
 ### 3. Check Items
 
 **Automated checks:**
-- ✅ No Bundler warnings (gem duplication, version conflicts)
-- ✅ No Rails errors (initializer, environment)
-- ✅ RuboCop passes (if .rubocop.yml modified)
+- No Bundler warnings (gem duplication, version conflicts)
+- No Rails errors (initializer, environment)
+- RuboCop passes (if .rubocop.yml modified)
 
 **Manual checks:**
-- ✅ Files generated correctly (Dockerfile, compose.yaml, .env.example)
-- ✅ Configuration file content correct (config/environments/, config/initializers/)
-- ✅ Documentation synchronized (README.md, gem comments)
+- Files generated correctly (Dockerfile, compose.yaml, .env.example)
+- Configuration file content correct (config/environments/, config/initializers/)
+- Documentation synchronized (README.md, gem comments)
 
 ## Advanced Topics
 

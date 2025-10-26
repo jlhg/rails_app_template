@@ -52,7 +52,7 @@ locale_content = Net::HTTP.get_response(locale_url)
 if locale_content.is_a?(Net::HTTPSuccess)
   file "config/locales/zh-TW.yml", locale_content.body
 else
-  say "⚠️  Warning: Failed to download zh-TW locale file (HTTP #{locale_content.code})"
+  say "Warning: Failed to download zh-TW locale file (HTTP #{locale_content.code})"
   say "   You can manually download it later from:"
   say "   https://github.com/svenfuchs/rails-i18n/raw/master/rails/locale/zh-TW.yml"
 end
