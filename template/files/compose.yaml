@@ -25,7 +25,7 @@
 #       environment:
 #         - RAILS_ENV=development
 #       volumes:
-#         - .:/app  # Live code reload
+#         - .:/rails  # Live code reload
 #
 # Override defaults using:
 # 1. .env file (for common overrides)
@@ -35,11 +35,15 @@
 name: "rails_app"
 
 # Shared healthcheck configuration
+# interval: How often to check (30s)
+# timeout: Max time to wait for response (10s)
+# retries: Number of consecutive failures before unhealthy (3)
+# start_period: Grace period for app startup (40s for Rails cold boot)
 x-healthcheck-default: &healthcheck-default
   interval: 30s
   timeout: 10s
-  retries: 10
-  start_period: 10s
+  retries: 3
+  start_period: 40s
 
 # Shared web service configuration
 x-web-common: &web-common
@@ -58,8 +62,8 @@ x-web-common: &web-common
       - gitlab_pat
   restart: unless-stopped
   volumes:
-    - .:/app
-    - ./.srv/web/log:/app/log
+    - .:/rails
+    - ./.srv/web/log:/rails/log
   depends_on:
     pg:
       condition: service_healthy

@@ -1,58 +1,82 @@
-# Git
-.git
-.gitignore
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file for more about ignoring files.
 
-# Docker files (not needed in image)
-.dockerignore
-Dockerfile
-Dockerfile.*
-compose.yaml
-compose.yml
-compose.*.yaml
-compose.*.yml
+# Ignore git directory
+/.git/
+/.gitignore
+/.gitattributes
 
-# Editor temp files
+# Ignore bundler config
+/.bundle
+
+# Ignore all environment files (secrets should use Docker secrets)
+/.env*
+!/.env.example
+
+# Ignore all default key files
+/config/master.key
+/config/credentials/*.key
+
+# Ignore all logfiles and tempfiles
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+
+# Ignore pidfiles, but keep the directory
+/tmp/pids/*
+!/tmp/pids/.keep
+
+# Ignore storage (uploaded files in development and any SQLite databases)
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/.keep
+
+# Ignore test files and coverage reports
+/test/
+/spec/
+/coverage/
+
+# Ignore CI service files
+/.github
+
+# Ignore Kamal deployment files
+/config/deploy*.yml
+/.kamal
+
+# Ignore development files
+/.devcontainer
+.pry_history
+
+# Ignore Docker-related files
+/.dockerignore
+/Dockerfile*
+/compose.yaml
+/compose.yml
+/compose.*.yaml
+/compose.*.yml
+
+# Ignore Docker development files
+/.srv/
+/.secrets/
+
+# Ignore editor temp files
 \#*\#
 *~
 
-# Development files
-.pry_history
-
-# Environment files (local overrides)
-.env.local
-.env.*.local
-
-# Logs and temp files
-/tmp/
-/log/
-
-# Test files
-/test/
-/spec/
-
-# Coverage reports
-/coverage/
-
-# Docker development files
-.srv/
-.secrets/
-
-# Credentials
-/config/master.key
-
-# Editor directories and files
-.vscode
-.idea
+# Ignore editor directories and files
+/.vscode
+/.idea
 .DS_Store
 
-# Claude Code (development guide, not needed in production)
-.claude/
-CLAUDE.md
+# Ignore Claude Code (development guide, not needed in production)
+/.claude/
+/CLAUDE.md
 
-# Development tools configuration
-.rubocop.yml
-.rubocop_todo.yml
-.rspec
+# Ignore development tools configuration
+/.rubocop.yml
+/.rubocop_todo.yml
+/.rspec
 
-# Bundler (if using --deployment, vendor/bundle is rebuilt in image)
-vendor/bundle/
+# Ignore bundler vendor (rebuilt in image with --deployment)
+/vendor/bundle/

@@ -3,6 +3,8 @@
 # Perfect for: notifications, chat, live updates
 
 # Copy cable.yml configuration
+# Rails 8.1+ creates config/cable.yml by default, so we need to remove it first
+remove_file "config/cable.yml"
 copy_file "files/cable.yml", "config/cable.yml"
 
 # Mount ActionCable endpoint in routes

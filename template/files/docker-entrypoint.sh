@@ -1,5 +1,4 @@
-#!/bin/bash
-set -e
+#!/bin/bash -e
 
 # Helper function to read secret from file
 # Usage: read_secret ENV_VAR_NAME FILE_ENV_VAR_NAME
@@ -19,26 +18,32 @@ read_secret() {
 }
 
 # Remove pre-existing server.pid for Rails
-rm -f /app/tmp/pids/server.pid
+rm -f /rails/tmp/pids/server.pid
 
 # Load secrets from files (only if *_FILE variables are set)
 read_secret "SECRET_KEY_BASE" "SECRET_KEY_BASE_FILE"
 read_secret "DATABASE_PASSWORD" "DATABASE_PASSWORD_FILE"
 read_secret "REDIS_PASSWORD" "REDIS_PASSWORD_FILE"
+read_secret "REDIS_CABLE_PASSWORD" "REDIS_CABLE_PASSWORD_FILE"
+read_secret "REDIS_CACHE_PASSWORD" "REDIS_CACHE_PASSWORD_FILE"
+read_secret "REDIS_SESSION_PASSWORD" "REDIS_SESSION_PASSWORD_FILE"
 
-# Wait for database to be ready (simple check)
-until pg_isready -h "${DATABASE_HOST:-pg}" -U "${DATABASE_USER:-postgres}" > /dev/null 2>&1; do
-  echo "Waiting for PostgreSQL to be ready..."
-  sleep 2
-done
-
-echo "PostgreSQL is ready!"
-
-# Run database migrations only if RAILS_DB_PREPARE is set
+# Database preparation (optional, controlled by RAILS_DB_PREPARE)
+# Set RAILS_DB_PREPARE=true to automatically prepare database on startup
 if [ "${RAILS_DB_PREPARE:-false}" = "true" ]; then
+  # Wait for database to be ready
+  if command -v pg_isready > /dev/null 2>&1; then
+    until pg_isready -h "${DATABASE_HOST:-pg}" -U "${DATABASE_USER:-postgres}" > /dev/null 2>&1; do
+      echo "Waiting for PostgreSQL to be ready..."
+      sleep 2
+    done
+    echo "PostgreSQL is ready!"
+  fi
+
+  # Run database preparation (creates DB if needed, runs migrations)
   echo "Running database preparation..."
-  bundle exec rails db:prepare
+  ./bin/rails db:prepare
 fi
 
 # Execute the main command (use exec to replace shell process)
-exec "$@"
+exec "${@}"

@@ -29,6 +29,8 @@ remove_file ".rubocop.yml"
 copy_file "files/.rubocop.yml", ".rubocop.yml"
 
 # Add .dockerignore for Docker deployments
+# Rails 8.1+ creates .dockerignore by default, so we need to remove it first
+remove_file ".dockerignore"
 copy_file "files/.dockerignore_template", ".dockerignore"
 
 # Add Docker compose template
@@ -38,10 +40,13 @@ copy_file "files/compose.yaml", "compose.yaml"
 copy_file "files/compose.local.yaml.example", "compose.local.yaml.example"
 
 # Add Dockerfile template
+# Rails 8.1+ creates Dockerfile by default, so we need to remove it first
+remove_file "Dockerfile"
 copy_file "files/Dockerfile", "Dockerfile"
 
-# Add Docker entrypoint script
-copy_file "files/docker-entrypoint.sh", "docker-entrypoint.sh"
+# Add Docker entrypoint script (Rails 8.1+ convention: bin/docker-entrypoint)
+copy_file "files/docker-entrypoint.sh", "bin/docker-entrypoint"
+chmod "bin/docker-entrypoint", 0755
 
 # Add .env.example for environment configuration
 copy_file "files/.env.example", ".env.example"
