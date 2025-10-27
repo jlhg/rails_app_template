@@ -76,13 +76,13 @@ drwx------  (700)  .secrets/
 
 ## Security Notes
 
-✅ **Safe:**
+**Safe:**
 - Directory is 700 (only owner can list files)
 - Files are 640 (group read-only)
 - All files are gitignored
 - Docker mounts secrets as read-only in containers
 
-❌ **Never:**
+**Never:**
 - Commit these files to git
 - Use 644 or 777 permissions (world-readable)
 - Share secrets via email or chat
@@ -109,68 +109,21 @@ chmod 640 .secrets/rails_secret_key_base
 
 ### Cloudflare Tunnel Setup (Optional)
 
-If you want to expose your app to the internet using Cloudflare Tunnel:
-
 ```bash
 # 1. Create a tunnel at: https://one.dash.cloudflare.com/
 #    Navigate to: Access → Tunnels → Create a tunnel
 #    Give it a name (e.g., "my-rails-app")
 
-# 2. Download the tunnel credentials JSON
-#    After creating the tunnel, Cloudflare will show credentials
-#    It's a JSON file that looks like:
-#    {
-#      "AccountTag": "...",
-#      "TunnelSecret": "...",
-#      "TunnelID": "..."
-#    }
+# 2. Copy the tunnel token
+#    After creating the tunnel, Cloudflare will show a token
+#    It's a single long string (not a JSON file)
 
-# 3. Save the entire JSON to cf_tunnel_token
-cd .secrets
-cat > cf_tunnel_token << 'EOF'
-{
-  "AccountTag": "your-account-tag-here",
-  "TunnelSecret": "your-tunnel-secret-here",
-  "TunnelID": "your-tunnel-id-here"
-}
-EOF
-chmod 640 cf_tunnel_token
-cd ..
+# 3. Save the token to cf_tunnel_token
+nano cf_tunnel_token
+#    Paste the token, save and exit (Ctrl+X, Y, Enter)
 
-# 4. Copy and configure cloudflared-config.yaml
-cp cloudflared-config.yaml.example cloudflared-config.yaml
-# Edit cloudflared-config.yaml:
-#   - Replace YOUR_TUNNEL_ID_HERE with your Tunnel ID
-#   - Replace api.yourdomain.com with your domain
-#   - Configure ingress rules as needed
-
-# 5. Start with cloudflare profile
-docker compose --profile cloudflare up -d
-```
-
-**IMPORTANT:** The `cf_tunnel_token` file contains the credentials JSON (not a simple token string).
-
-### Cloudflared Container Errors
-
-If cloudflared cannot start:
-
-```bash
-# 1. Verify credentials file exists and has correct permissions
-ls -l .secrets/cf_tunnel_token
-# Should show: -rw-r----- (640)
-
-# 2. Verify credentials file is valid JSON
-cat .secrets/cf_tunnel_token | jq .
-# Should parse without errors
-
-# 3. Verify cloudflared-config.yaml exists
-ls -l cloudflared-config.yaml
-
-# 4. Check cloudflared logs
-docker compose logs cloudflared
-
-# 5. Fix permissions if needed
-chmod 640 .secrets/cf_tunnel_token
+# 4. Start with cf-tunnel profile
+docker compose --profile cf-tunnel up -d
 ```
 
 ### Private Repository Access

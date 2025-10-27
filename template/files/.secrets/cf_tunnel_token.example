@@ -1,33 +1,14 @@
-# Cloudflare Tunnel Credentials (JSON format)
-#
-# IMPORTANT: This file should contain the tunnel credentials JSON,
-# not a simple token string.
+# Cloudflare Tunnel Token
 #
 # Setup Instructions:
 # 1. Create a tunnel at: https://one.dash.cloudflare.com/
 #    Navigate to: Access → Tunnels → Create a tunnel
 #
-# 2. After creating the tunnel, download the credentials JSON
-#    The JSON file contains: AccountTag, TunnelSecret, TunnelID
+# 2. After creating the tunnel, copy the tunnel token
+#    (a single long base64-encoded string)
 #
-# 3. Copy this file to 'cf_tunnel_token' (without .example)
-#    cp cf_tunnel_token.example cf_tunnel_token
-#
-# 4. Replace the placeholder values below with your actual credentials
-#
-# 5. Set proper permissions:
-#    chmod 640 cf_tunnel_token
-#
-# 6. Configure cloudflared-config.yaml with your tunnel ID and domain
-#
-# 7. Start with cloudflare profile:
-#    docker compose --profile cloudflare up -d
-#
-# Note: The tunnel ID in this file must match the tunnel ID
-# in cloudflared-config.yaml
+# 3. Create cf_tunnel_token file and paste the token:
+#    nano cf_tunnel_token
+#    # Paste the token, save and exit
 
-{
-  "AccountTag": "your-cloudflare-account-tag-here",
-  "TunnelSecret": "your-tunnel-secret-base64-encoded-string-here",
-  "TunnelID": "your-tunnel-uuid-here"
-}
+your-cloudflare-tunnel-token

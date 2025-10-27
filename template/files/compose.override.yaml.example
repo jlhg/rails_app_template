@@ -1,15 +1,13 @@
 # Docker Compose Override for Local Development
 #
 # This file is for local development with Docker (includes dev/test gems).
-# Copy this file to compose.local.yaml and customize as needed.
+# Copy this file to compose.override.yaml and customize as needed.
 #
 # Usage:
-#   docker compose -f compose.yaml -f compose.local.yaml up
-#
-# DO NOT commit compose.local.yaml to git (already in .gitignore)
+#   docker compose up  # Automatically loads compose.override.yaml
 
 services:
-  web:
+  rails:
     build:
       args:
         # Install ALL gems including development and test groups
@@ -27,25 +25,3 @@ services:
     volumes:
       # Live code reload (mount source code into container)
       - .:/rails
-    # Override command for development (optional)
-    # command: bundle exec rails server -b 0.0.0.0
-    # Or run tests:
-    # command: bundle exec rspec
-
-  # Expose PostgreSQL port for debugging (optional)
-  pg:
-    ports:
-      - "5432:5432"
-
-  # Expose Redis ports for debugging (optional)
-  redis_cache:
-    ports:
-      - "6379:6379"
-
-  redis_cable:
-    ports:
-      - "6380:6379"
-
-  redis_session:
-    ports:
-      - "6381:6379"

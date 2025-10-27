@@ -36,8 +36,8 @@ copy_file "files/.dockerignore_template", ".dockerignore"
 # Add Docker compose template
 copy_file "files/compose.yaml", "compose.yaml"
 
-# Add Docker compose local development example
-copy_file "files/compose.local.yaml.example", "compose.local.yaml.example"
+# Add Docker compose override example for development
+copy_file "files/compose.override.yaml.example", "compose.override.yaml.example"
 
 # Add Dockerfile template
 # Rails 8.1+ creates Dockerfile by default, so we need to remove it first
@@ -58,9 +58,6 @@ copy_file "files/.env.local.example", ".env.local.example"
 
 # Create .secrets directory for Docker secrets with proper permissions
 directory "files/.secrets", ".secrets"
-
-# Add Docker management rake tasks
-copy_file "files/docker.rake", "lib/tasks/docker.rake"
 
 # Set secure permissions for .secrets directory
 # 700: Only owner can read/write/execute (prevents other users from listing)

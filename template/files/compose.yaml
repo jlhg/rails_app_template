@@ -1,52 +1,13 @@
-# Docker Compose Configuration for Rails Production Deployment
-#
-# IMPORTANT: This configuration is designed for production-like environments (production/staging).
-#
-# The Docker image built from Dockerfile:
-# - Installs only production gems (BUNDLE_WITHOUT=development:test)
-# - Optimized for production use (RAILS_ENV=production by default)
-# - Enables YJIT for better performance
-#
-# Supported environments:
-# - production  - Full production deployment
-# - staging     - Staging environment (uses same production gems)
-# - demo        - Demo/preview environments
-#
-# NOT suitable for:
-# - development - Missing development gems (pry, spring, etc.)
-# - test        - Missing test gems (rspec, factory_bot, etc.)
-#
-# For local development, use compose.local.yaml with volume mounts:
-#   services:
-#     web:
-#       build:
-#         args:
-#           BUNDLE_WITHOUT: ""  # Install all gems including dev/test
-#       environment:
-#         - RAILS_ENV=development
-#       volumes:
-#         - .:/rails  # Live code reload
-#
-# Override defaults using:
-# 1. .env file (for common overrides)
-# 2. compose.override.yaml (auto-loaded, for personal settings)
-# 3. compose.local.yaml or compose.staging.yaml (use with: docker compose -f compose.yaml -f compose.staging.yaml up)
-#
-name: "rails_app"
+name: "rails-app"
 
-# Shared healthcheck configuration
-# interval: How often to check (30s)
-# timeout: Max time to wait for response (10s)
-# retries: Number of consecutive failures before unhealthy (3)
-# start_period: Grace period for app startup (40s for Rails cold boot)
 x-healthcheck-default: &healthcheck-default
   interval: 30s
   timeout: 10s
   retries: 3
   start_period: 40s
 
-# Shared web service configuration
-x-web-common: &web-common
+# Shared rails service configuration
+x-rails-common: &rails-common
   build:
     context: .
     args:
@@ -62,8 +23,7 @@ x-web-common: &web-common
       - gitlab_pat
   restart: unless-stopped
   volumes:
-    - .:/rails
-    - ./.srv/web/log:/rails/log
+    - rails-logs:/rails/log
   depends_on:
     pg:
       condition: service_healthy
@@ -127,7 +87,7 @@ services:
       <<: *healthcheck-default
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
     volumes:
-      - ./.srv/pg:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=${DATABASE_USER:-postgres}
       - POSTGRES_PASSWORD_FILE=${DATABASE_PASSWORD_FILE:-/run/secrets/database_password}
@@ -140,7 +100,6 @@ services:
   # Valkey Cache (Rails.cache, rate limiting)
   # Valkey is 100% compatible with Redis, fully open source (BSD-3)
   # Policy: allkeys-lru (can evict old data)
-  # Persistence: No (cache can be rebuilt)
   redis_cache:
     image: valkey/valkey:8-alpine
     restart: unless-stopped
@@ -162,6 +121,8 @@ services:
         - |
           REDIS_PASS_FILE=$${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
           redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+    volumes:
+      - redis-cache-data:/data
     environment:
       - REDIS_CACHE_PASSWORD_FILE=${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
     secrets:
@@ -172,7 +133,6 @@ services:
   # Valkey Cable (ActionCable WebSocket pub/sub)
   # Valkey is 100% compatible with Redis, fully open source (BSD-3)
   # Policy: noeviction (pub/sub cannot be evicted)
-  # Persistence: No (real-time data, no need to persist)
   redis_cable:
     image: valkey/valkey:8-alpine
     restart: unless-stopped
@@ -194,6 +154,8 @@ services:
         - |
           REDIS_PASS_FILE=$${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
           redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+    volumes:
+      - redis-cable-data:/data
     environment:
       - REDIS_CABLE_PASSWORD_FILE=${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
     secrets:
@@ -228,7 +190,7 @@ services:
           REDIS_PASS_FILE=$${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
           redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
     volumes:
-      - ./.srv/redis_session:/data
+      - redis-session-data:/data
     environment:
       - REDIS_SESSION_PASSWORD_FILE=${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
     secrets:
@@ -237,49 +199,24 @@ services:
       - 6379
 
   # Rails Web Service
-  web:
-    <<: *web-common
+  rails:
+    <<: *rails-common
     healthcheck:
       <<: *healthcheck-default
       test: ['CMD', 'curl', '-fsS', 'http://localhost:3000/up']
-    # Graceful shutdown configuration
-    # When stopping the container, Docker sends SIGTERM to Puma
-    # Puma will: (1) Stop accepting new requests, (2) Wait for existing requests to complete, (3) Shutdown
     stop_signal: SIGTERM       # Signal to send (SIGTERM is default, explicit for clarity)
     stop_grace_period: 60s     # Wait up to 60s for graceful shutdown before sending SIGKILL
                                # Should be > PUMA_WORKER_TIMEOUT (default 30s) to allow requests to complete
-    # Command is handled by docker-entrypoint.sh + Dockerfile CMD
-    # Override if needed: command: bundle exec rails console
-    ports:
-      - "3000:3000"
+    expose:
+      - 3000
 
-  # Cloudflare Tunnel (optional - for secure remote access with WebSocket support)
-  # Copy cloudflared-config.yaml.example to cloudflared-config.yaml and configure
   cloudflared:
     image: cloudflare/cloudflared:latest
-    restart: no
-    command: tunnel --config /etc/cloudflared/config.yaml run
-    depends_on:
-      web:
-        condition: service_healthy
-    volumes:
-      # Mount config file (contains tunnel ID and ingress rules, no secrets)
-      - ./cloudflared-config.yaml:/etc/cloudflared/config.yaml:ro
+    restart: "no"
+    command: tunnel run --token-file /run/secrets/cf_tunnel_token
     secrets:
-      # Tunnel credentials (actual secret, stored in .secrets/)
       - cf_tunnel_token
-    healthcheck:
-      # Check metrics endpoint (configured in cloudflared-config.yaml)
-      test: ['CMD-SHELL', 'wget -q --spider http://localhost:41111/ready || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    profiles:
-      - cloudflare
 
-# Docker secrets (all sensitive data stored in .secrets/ directory)
-# If you need different paths, edit this file directly or use a custom compose file
 secrets:
   database_password:
     file: ./.secrets/database_password
@@ -299,3 +236,10 @@ secrets:
     file: ./.secrets/github_pat
   gitlab_pat:
     file: ./.secrets/gitlab_pat
+
+volumes:
+  rails-logs:
+  pg-data:
+  redis-cache-data:
+  redis-cable-data:
+  redis-session-data:

@@ -8,7 +8,7 @@
 #
 # Development build (includes all gems):
 #   docker build --build-arg BUNDLE_WITHOUT="" -t myapp:dev .
-#   See compose.local.yaml.example for Docker Compose development setup
+#   See compose.override.yaml.example for Docker Compose development setup
 
 # Use Debian slim for better jemalloc compatibility and memory optimization
 # Note: Alpine + jemalloc can cause segfaults due to musl libc incompatibility

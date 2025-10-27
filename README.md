@@ -118,19 +118,19 @@ This template includes production-ready Docker configuration with **industry bes
 **Development image (with all gems):**
 ```bash
 # 1. Copy example file
-cp compose.local.yaml.example compose.local.yaml
+cp compose.override.yaml.example compose.override.yaml
 
 # 2. Build and run with development configuration
-docker compose -f compose.yaml -f compose.local.yaml up --build
+docker compose up --build
 
 # 3. Run tests inside container
-docker compose -f compose.yaml -f compose.local.yaml run --rm web bundle exec rspec
+docker compose run --rm web bundle exec rspec
 
 # 4. Open Rails console
-docker compose -f compose.yaml -f compose.local.yaml exec web bundle exec rails console
+docker compose exec web bundle exec rails console
 ```
 
-**Key differences in `compose.local.yaml`:**
+**Key differences in `compose.override.yaml`:**
 - `BUNDLE_WITHOUT: ""` - Installs **all** gems (development + test + production)
 - `RAILS_ENV=development` - Development mode
 - `volumes: - .:/app` - Live code reload (changes reflected immediately)
@@ -247,10 +247,9 @@ While **Lograge** handles structured logging, **Sentry** specializes in error tr
 ### Included Files
 
 - **compose.yaml** - Docker Compose for production with PostgreSQL 18, Valkey 8, Rails, and Cloudflare Tunnel
-- **compose.local.yaml.example** - Development override (includes dev/test gems, live reload)
+- **compose.override.yaml.example** - Development override (includes dev/test gems, live reload)
 - **Dockerfile** - Optimized build for Ruby 3.4 + Alpine (supports `BUNDLE_WITHOUT` build arg)
 - **docker-entrypoint.sh** - Entrypoint script for initialization and secret handling
-- **lib/tasks/docker.rake** - Docker Compose management tasks (build, up, down, logs, console, etc.)
 - **.dockerignore** - Reduces image size by excluding unnecessary files
 - **.secrets/** - Directory for storing sensitive data (gitignored)
 - **.env.example** - Application configuration (deployment-agnostic)
@@ -293,42 +292,7 @@ environment:
 | **Startup control** | Always runs migrations | Configurable via RAILS_DB_PREPARE |
 | **Configuration** | Hardcoded URLs | Flexible (URL or components) |
 
-### Docker Management with Rake Tasks
-
-This template includes **`lib/tasks/docker.rake`** for convenient Docker Compose management:
-
-```bash
-# Initial setup (create secrets automatically)
-rake docker:setup
-
-# Build and start (production-like environment)
-rake docker:build
-rake docker:up
-
-# Build and start (local development environment)
-rake docker:build[local]
-rake docker:up[local]
-
-# Common tasks
-rake docker:logs          # View logs
-rake docker:console       # Rails console
-rake docker:shell         # Bash shell
-rake docker:migrate       # Run migrations
-rake docker:down          # Stop containers
-
-# Database tasks
-rake docker:db:prepare    # First time setup
-rake docker:db:reset      # Reset database
-
-# Testing (local environment)
-rake docker:test:rspec[local]
-rake docker:test:rubocop[local]
-
-# See all available tasks
-rake docker:help
-```
-
-### Quick Start (Manual)
+### Quick Start
 
 ```bash
 # 1. Setup secrets (REQUIRED for security)
@@ -430,51 +394,24 @@ docker compose build
 
 ### Cloudflare Tunnel Setup (Optional)
 
-Securely expose your Rails API to the internet with **WebSocket support** for ActionCable.
-
 **Quick setup:**
 
 ```bash
 # 1. Create tunnel at https://one.dash.cloudflare.com/
 #    Navigate to: Access → Tunnels → Create a tunnel
-#    Save the credentials JSON
+#    Copy the tunnel token (a single long string)
 
-# 2. Save tunnel credentials
-cd .secrets
-cat > cf_tunnel_token << 'EOF'
-{
-  "AccountTag": "your-account-tag",
-  "TunnelSecret": "your-tunnel-secret",
-  "TunnelID": "your-tunnel-id"
-}
-EOF
-chmod 640 cf_tunnel_token
-cd ..
+# 2. Save tunnel token to file
+nano .secrets/cf_tunnel_token
+#    Paste the token, save and exit (Ctrl+X, Y, Enter)
 
-# 3. Configure tunnel ingress rules
-cp cloudflared-config.yaml.example cloudflared-config.yaml
-# Edit cloudflared-config.yaml:
-#   - Replace YOUR_TUNNEL_ID_HERE with your tunnel ID
-#   - Replace api.yourdomain.com with your domain
-
-# 4. Configure DNS (Cloudflare Dashboard)
+# 3. Configure DNS (Cloudflare Dashboard)
 #    Add CNAME: api.yourdomain.com → <tunnel-id>.cfargotunnel.com
+#    (The tunnel ID is part of your token)
 
-# 5. Start with cloudflare profile
-docker compose --profile cloudflare up -d
+# 4. Start with cf-tunnel profile
+docker compose --profile cf-tunnel up -d
 ```
-
-**Key features:**
-- No exposed ports or public IP needed
-- Automatic SSL/TLS termination
-- **WebSocket support** for ActionCable real-time features
-- Built-in DDoS protection
-- Free tier available
-
-**WebSocket limitations:**
-- Free plan: 100s timeout (ActionCable auto-reconnects)
-- Pro/Business: 600s timeout
-- Enterprise: Unlimited
 
 ### Production Deployment
 
@@ -796,7 +733,6 @@ docker compose exec web rails runner 'puts RubyVM::YJIT.enabled?'
 | `compose.staging.yaml` | Staging overrides | Yes | No |
 | `compose.dev.yaml` | Shared dev config | Yes | No |
 | `compose.override.yaml` | Personal overrides | No (gitignored) | Yes |
-| `compose.local.yaml` | Personal explicit | No (gitignored) | No |
 
 **Usage:**
 
@@ -813,9 +749,6 @@ docker compose -f compose.yaml -f compose.staging.yaml up -d
 
 # Production
 docker compose -f compose.yaml -f compose.production.yaml up -d
-
-# Personal override (explicit)
-docker compose -f compose.yaml -f compose.local.yaml up -d
 ```
 
 **Best Practice Patterns:**

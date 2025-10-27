@@ -1,5 +1,0 @@
-{
-  "AccountTag": "your-cloudflare-account-tag-here",
-  "TunnelSecret": "your-tunnel-secret-base64-encoded-here",
-  "TunnelID": "your-tunnel-uuid-here"
-}

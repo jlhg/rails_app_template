@@ -1,15 +1,10 @@
 # syntax=docker/dockerfile:1
 FROM nginx:1.29-alpine
-
 WORKDIR /app
-
-# Copy OpenAPI documentation files
-COPY . .
-
-# Create nginx configuration with heredoc
+COPY ./src/ .
 COPY <<EOF /etc/nginx/nginx.conf
 user             nginx;
-worker_processes auto;
+worker_processes 1;
 error_log        /var/log/nginx/error.log warn;
 pid              /var/run/nginx.pid;
 
