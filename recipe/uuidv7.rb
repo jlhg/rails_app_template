@@ -55,49 +55,15 @@ initializer "uuidv7.rb", <<~RUBY
 RUBY
 
 # Add migration template for UUID tables with references
-file "lib/templates/active_record/migration/create_table_migration.rb", <<~RUBY
-  class <%= migration_class_name %> < ActiveRecord::Migration[<%= ActiveRecord::Migration.current_version %>]
-    def change
-      create_table :<%= table_name %><%= primary_key_type %><%= ', default: -> { "uuidv7()" }' if options[:primary_key_type] == :uuid %> do |t|
-  <% attributes.each do |attribute| -%>
-  <% if attribute.password_digest? -%>
-        t.string :password_digest<%= attribute.inject_options %>
-  <% elsif attribute.token? -%>
-        t.string :<%= attribute.name %><%= attribute.inject_options %>
-  <% elsif attribute.reference? -%>
-        t.references :<%= attribute.name %><%= attribute.inject_options %><%= foreign_key_type %>
-  <% elsif !attribute.virtual? -%>
-        t.<%= attribute.type %> :<%= attribute.name %><%= attribute.inject_options %>
-  <% end -%>
-  <% end -%>
-  <% if options[:timestamps] %>
-        t.timestamps
-  <% end -%>
-      end
-  <% attributes.select(&:token?).each do |attribute| -%>
-      add_index :<%= table_name %>, :<%= attribute.index_name %><%= attribute.inject_index_options %>, unique: true
-  <% end -%>
-  <% attributes_with_index.each do |attribute| -%>
-      add_index :<%= table_name %>, :<%= attribute.index_name %><%= attribute.inject_index_options %>
-  <% end -%>
-    end
-
-    private
-
-    def primary_key_type
-      ", id: :uuid" if options[:primary_key_type] == :uuid
-    end
-
-    def foreign_key_type
-      ", type: :uuid" if options[:primary_key_type] == :uuid
-    end
-  end
-RUBY
+# Template file: template/files/lib/templates/active_record/migration/create_table_migration.rb
+directory "files/lib", "lib"
 
 # NOTE: Migration generator will automatically use UUID for new tables.
+# The default value (uuidv7()) is set globally in config/initializers/uuidv7.rb
+#
 # Example generated migration:
 #
-#   create_table :orders, id: :uuid, default: -> { "uuidv7()" } do |t|
+#   create_table :orders, id: :uuid do |t|
 #     t.references :user, type: :uuid, foreign_key: true
 #     t.string :status
 #     t.timestamps
