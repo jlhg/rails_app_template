@@ -2,7 +2,7 @@
 .srv/
 
 # Secrets (never commit actual secrets)
-.secrets/
+.secrets/*
 !.secrets/*.example
 !.secrets/README.md
 

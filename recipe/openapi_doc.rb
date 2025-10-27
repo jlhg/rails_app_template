@@ -22,6 +22,12 @@
 # Copy the entire OpenAPI documentation structure
 directory "docs/openapi", "docs/openapi"
 
+# Rename template files to actual filenames
+inside "docs/openapi" do
+  run "mv .gitignore_template .gitignore", verbose: false
+  run "mv .dockerignore_template .dockerignore", verbose: false
+end
+
 say_status :info, "OpenAPI documentation template installed in docs/openapi/", :green
 say_status :usage, "Run 'cd docs/openapi && docker compose up' to start the documentation service", :yellow
 say_status :access, "Documentation will be available at http://localhost:8080", :yellow
