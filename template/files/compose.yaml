@@ -21,6 +21,8 @@ x-rails-common: &rails-common
     # secrets:
     #   - github_pat
     #   - gitlab_pat
+  env_file:
+    - .env
   restart: unless-stopped
   volumes:
     - rails-logs:/rails/log

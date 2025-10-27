@@ -53,9 +53,6 @@ chmod "bin/docker-entrypoint", 0755
 # Add .env.example for environment configuration
 copy_file "files/.env.example", ".env.example"
 
-# Add .env.local.example for local development (non-Docker)
-copy_file "files/.env.local.example", ".env.local.example"
-
 # Create .secrets directory for Docker secrets with proper permissions
 directory "files/.secrets", ".secrets"
 
@@ -99,6 +96,21 @@ recipe "sentry"
 recipe "database_yml"
 recipe "uuidv7"
 recipe "action_storage"
+
+# Set up basic route structure
+# Health check endpoint at root level (outside API scope)
+route 'get "up" => "rails/health#show", as: :health_check'
+
+# Create API scope for all API endpoints
+inject_into_file "config/routes.rb", after: "Rails.application.routes.draw do\n" do
+  <<~RUBY
+    scope path: "/api", as: "api" do
+      # API routes go here
+    end
+
+  RUBY
+end
+
 recipe "action_cable"
 recipe "openapi_doc"
 # recipe "google-cloud-storage"

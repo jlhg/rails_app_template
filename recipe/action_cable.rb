@@ -7,8 +7,13 @@
 remove_file "config/cable.yml"
 copy_file "files/cable.yml", "config/cable.yml"
 
-# Mount ActionCable endpoint in routes
-route 'mount ActionCable.server => "/cable"'
+# Mount ActionCable endpoint inside API scope
+inject_into_file "config/routes.rb", after: 'scope path: "/api", as: "api" do' do
+  <<~RUBY
+
+    mount ActionCable.server => "/cable"
+  RUBY
+end
 
 # Configure ActionCable for production
 environment <<-CODE, env: "production"

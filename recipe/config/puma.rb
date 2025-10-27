@@ -15,9 +15,11 @@ create_file "config/puma.rb", <<~RUBY, force: true
   #
   worker_timeout ENV.fetch("PUMA_WORKER_TIMEOUT") { 30 }
 
-  # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
+  # Specifies the `bind` address that Puma will listen on.
+  # Default is 0.0.0.0 to allow access from any interface (required for Docker containers).
+  # Use BIND env var to override (e.g., BIND="tcp://127.0.0.1:3000" for localhost only)
   #
-  port ENV.fetch("PORT") { 3000 }
+  bind ENV.fetch("BIND") { "tcp://0.0.0.0:\#{ENV.fetch('PORT', 3000)}" }
 
   # Specifies the `environment` that Puma will run in.
   #

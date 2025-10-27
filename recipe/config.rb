@@ -24,3 +24,16 @@ recipe "config/cors"
 recipe "config/puma"
 recipe "config/action_mailer"
 recipe "config/log"
+
+# Application-wide configuration (all environments)
+environment <<~RUBY
+  # Silence healthcheck logs
+  config.silence_healthcheck_path = "/up"
+
+  # Allow additional hosts from environment variable
+  # Configure via ALLOWED_HOSTS env var (comma-separated)
+  # Example: ALLOWED_HOSTS="example.com,test.example.com,dev.example.com"
+  # Useful for Cloudflare Tunnel, ngrok, or custom domains
+  allowed_hosts = ENV.fetch("ALLOWED_HOSTS", "").split(",").map(&:strip).reject(&:empty?)
+  allowed_hosts.each { |host| config.hosts << host } unless allowed_hosts.empty?
+RUBY
