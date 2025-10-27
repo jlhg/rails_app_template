@@ -2,9 +2,6 @@
 #
 # This file is for local development with Docker (includes dev/test gems).
 # Copy this file to compose.override.yaml and customize as needed.
-#
-# Usage:
-#   docker compose up  # Automatically loads compose.override.yaml
 
 services:
   rails:
@@ -22,6 +19,13 @@ services:
       - RAILS_MIN_THREADS=5
       # Single worker for faster code reload
       - WEB_CONCURRENCY=0
+    stop_grace_period: 10s  # Fast restart for development (single worker mode)
     volumes:
       # Live code reload (mount source code into container)
       - .:/rails
+      - rails-logs-dev:/rails/log
+      - rails-tmp-dev:/rails/tmp
+
+volumes:
+  rails-logs-dev:
+  rails-tmp-dev:

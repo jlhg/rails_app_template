@@ -18,9 +18,9 @@ x-rails-common: &rails-common
       # Set via: REVISION=$(git rev-parse --short HEAD) docker compose build
       # Or add REVISION to .env file
       REVISION: ${REVISION:-}
-    secrets:
-      - github_pat
-      - gitlab_pat
+    # secrets:
+    #   - github_pat
+    #   - gitlab_pat
   restart: unless-stopped
   volumes:
     - rails-logs:/rails/log
@@ -205,8 +205,8 @@ services:
       <<: *healthcheck-default
       test: ['CMD', 'curl', '-fsS', 'http://localhost:3000/up']
     stop_signal: SIGTERM       # Signal to send (SIGTERM is default, explicit for clarity)
-    stop_grace_period: 60s     # Wait up to 60s for graceful shutdown before sending SIGKILL
-                               # Should be > PUMA_WORKER_TIMEOUT (default 30s) to allow requests to complete
+    stop_grace_period: 40s     # Wait up to 40s for graceful shutdown before sending SIGKILL
+                               # PUMA_WORKER_TIMEOUT (default 30s) + 10s buffer for cleanup
     expose:
       - 3000
 
@@ -232,10 +232,10 @@ secrets:
     file: ./.secrets/mailer_smtp_password
   cf_tunnel_token:
     file: ./.secrets/cf_tunnel_token
-  github_pat:
-    file: ./.secrets/github_pat
-  gitlab_pat:
-    file: ./.secrets/gitlab_pat
+  # github_pat:
+  #   file: ./.secrets/github_pat
+  # gitlab_pat:
+  #   file: ./.secrets/gitlab_pat
 
 volumes:
   rails-logs:
