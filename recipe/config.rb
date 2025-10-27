@@ -12,7 +12,7 @@
 # - Business rules: Settings.allowed_ip_addresses, Settings.default_avatar_url
 # - Timeout settings: Settings.job_timeout, Settings.api_timeout
 #
-# Note: config gem is installed but settings.yml only stores pg_db_prefix by default.
+# Note: config gem is installed but settings.yml is empty by default.
 # Add your business logic configuration as needed.
 
 init_gem "config"
@@ -21,7 +21,6 @@ init_gem "lograge"
 
 recipe "config/time_zone"
 recipe "config/cors"
-recipe "config/pg"
 recipe "config/puma"
 recipe "config/action_mailer"
 recipe "config/log"

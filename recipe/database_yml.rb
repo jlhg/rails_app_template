@@ -1,7 +1,7 @@
 # Replace sqlite3 with pg gem for PostgreSQL
 gsub_file "Gemfile", /gem ['"]sqlite3['"].*$/, 'gem "pg"'
 
-# Enhanced database.yml for Docker secrets support
+# Enhanced database.yml for Docker secrets support and Rails 8.1 multi-database
 database_yml_content = <<~YAML
   default: &default
     adapter: postgresql
@@ -34,14 +34,54 @@ database_yml_content = <<~YAML
     <% end %>
 
   development:
-    <<: *default
+    primary:
+      <<: *default
+    queue:
+      <<: *default
+      migrations_paths: db/queue_migrate
+    cache:
+      <<: *default
+      migrations_paths: db/cache_migrate
+    cable:
+      <<: *default
+      migrations_paths: db/cable_migrate
 
   test:
-    <<: *default
-    database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_test" } %>
+    primary:
+      <<: *default
+      database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_test" } %>
+    queue:
+      <<: *default
+      database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_test" } %>
+      migrations_paths: db/queue_migrate
+    cache:
+      <<: *default
+      database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_test" } %>
+      migrations_paths: db/cache_migrate
+    cable:
+      <<: *default
+      database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_test" } %>
+      migrations_paths: db/cable_migrate
 
   production:
-    <<: *default
+    primary:
+      <<: *default
+    queue:
+      <<: *default
+      # Solid Queue can use same database as primary
+      # Alternative: use separate database by setting different DATABASE_NAME
+      database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_\#{Rails.env}" } %>
+      migrations_paths: db/queue_migrate
+    cache:
+      <<: *default
+      # Solid Cache can use same database as primary
+      database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_\#{Rails.env}" } %>
+      migrations_paths: db/cache_migrate
+    cable:
+      <<: *default
+      # Solid Cable can use same database as primary
+      database: <%= ENV.fetch('DATABASE_NAME') { "\#{Rails.application.class.module_parent_name.underscore}_\#{Rails.env}" } %>
+      migrations_paths: db/cable_migrate
 YAML
 
 remove_file "config/database.yml"
