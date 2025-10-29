@@ -1,3 +1,5 @@
+require "prosopite"
+
 # Prosopite N+1 query detection for RSpec tests
 # Automatically detects N+1 queries in all request specs with zero false positives
 

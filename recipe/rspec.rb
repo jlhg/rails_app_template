@@ -1,9 +1,9 @@
-gem "rspec-rails"
-gem "shoulda-matchers"
-gem "factory_bot_rails"
-gem "faker"
-gem "mock_redis"
-gem "prosopite"
+gem "rspec-rails", group: [:test, :development]
+gem "shoulda-matchers", group: :test
+gem "factory_bot_rails", group: [:test, :development]
+gem "faker", group: [:test, :development]
+gem "mock_redis", group: :test
+gem "prosopite", group: :test
 
 # Generate RSpec installation
 generate "rspec:install"
