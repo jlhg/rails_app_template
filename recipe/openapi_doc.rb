@@ -20,7 +20,7 @@
 #   Access: http://localhost:8080
 
 # Copy the entire OpenAPI documentation structure
-directory "docs/openapi", "docs/openapi"
+directory "files/docs/openapi", "docs/openapi"
 
 # Rename template files to actual filenames
 inside "docs/openapi" do

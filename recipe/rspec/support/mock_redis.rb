@@ -1,5 +1,3 @@
-require "mock_redis"
-
 RSpec.configure do |config|
   config.before(:each) do
     # Replace Redis instances with MockRedis for testing
