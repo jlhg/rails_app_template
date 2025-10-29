@@ -15,25 +15,11 @@
 # Note: config gem is installed but settings.yml is empty by default.
 # Add your business logic configuration as needed.
 
-init_gem "config"
-init_gem "rack-cors"
-init_gem "lograge"
+gem "config"
 
-recipe "config/time_zone"
-recipe "config/cors"
-recipe "config/puma"
-recipe "config/action_mailer"
-recipe "config/log"
+generate "config:install"
 
-# Application-wide configuration (all environments)
-environment <<~RUBY
-  # Silence healthcheck logs
-  config.silence_healthcheck_path = "/up"
-
-  # Allow additional hosts from environment variable
-  # Configure via ALLOWED_HOSTS env var (comma-separated)
-  # Example: ALLOWED_HOSTS="example.com,test.example.com,dev.example.com"
-  # Useful for Cloudflare Tunnel, ngrok, or custom domains
-  allowed_hosts = ENV.fetch("ALLOWED_HOSTS", "").split(",").map(&:strip).reject(&:empty?)
-  allowed_hosts.each { |host| config.hosts << host } unless allowed_hosts.empty?
-RUBY
+# Rename config.rb to _config.rb to ensure it loads first (alphabetical order)
+inside("config/initializers") do
+  run("mv config.rb _config.rb")
+end

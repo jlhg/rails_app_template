@@ -67,7 +67,7 @@ module RequestHelper
   # Build params hash from method calls (legacy helper)
   # Usage: request_params(:name, :email) # => { name: user.name, email: user.email }
   def request_params(*keys)
-    keys.to_h { |k| [k, send(k)] }
+    keys.index_with { |k| send(k) }
   end
 
   private

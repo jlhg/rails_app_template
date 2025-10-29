@@ -1,5 +1,5 @@
 RSpec.configure do |config|
-  config.before(:each) do
+  config.before do
     # Replace Redis instances with MockRedis for testing
     # This prevents tests from using real Redis
     redis_mock = MockRedis.new
@@ -14,7 +14,7 @@ RSpec.configure do |config|
     Redis.current = redis_mock
   end
 
-  config.after(:each) do
+  config.after do
     # Clean up Redis mock data after each test
     Redis.current.flushdb if Redis.current.is_a?(MockRedis)
   end

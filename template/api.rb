@@ -22,39 +22,39 @@ create_file ".ruby-version", RUBY_VERSION
 
 # Replace default .gitignore with enhanced version
 remove_file ".gitignore"
-copy_file "files/.gitignore_template", ".gitignore"
+copy_file from_files(".gitignore_template"), ".gitignore"
 
 # Replace Rails 8 default .rubocop.yml with custom configuration
 remove_file ".rubocop.yml"
-copy_file "files/.rubocop.yml", ".rubocop.yml"
+copy_file from_files(".rubocop.yml"), ".rubocop.yml"
 
 # Add .dockerignore for Docker deployments
 # Rails 8.1+ creates .dockerignore by default, so we need to remove it first
 remove_file ".dockerignore"
-copy_file "files/.dockerignore_template", ".dockerignore"
+copy_file from_files(".dockerignore_template"), ".dockerignore"
 
 # Add Docker compose template
-copy_file "files/compose.yaml", "compose.yaml"
+copy_file from_files("compose.yaml"), "compose.yaml"
 
 # Add Docker compose override example for development
-copy_file "files/compose.override.yaml.example", "compose.override.yaml.example"
+copy_file from_files("compose.override.yaml.example"), "compose.override.yaml.example"
 
 # Add Dockerfile template
 # Rails 8.1+ creates Dockerfile by default, so we need to remove it first
 remove_file "Dockerfile"
-copy_file "files/Dockerfile", "Dockerfile"
+copy_file from_files("Dockerfile"), "Dockerfile"
 
 # Add Docker entrypoint script (Rails 8.1+ convention: bin/docker-entrypoint)
 # Rails 8.1+ creates bin/docker-entrypoint by default, so we need to remove it first
 remove_file "bin/docker-entrypoint"
-copy_file "files/docker-entrypoint.sh", "bin/docker-entrypoint"
+copy_file from_files("docker-entrypoint.sh"), "bin/docker-entrypoint"
 chmod "bin/docker-entrypoint", 0755
 
 # Add .env.example for environment configuration
-copy_file "files/.env.example", ".env.example"
+copy_file from_files(".env.example"), ".env.example"
 
 # Create .secrets directory for Docker secrets with proper permissions
-directory "files/.secrets", ".secrets"
+directory from_files(".secrets"), ".secrets"
 
 # Set secure permissions for .secrets directory
 # 700: Only owner can read/write/execute (prevents other users from listing)
@@ -75,24 +75,41 @@ end
 # Set test environment to use :test queue adapter
 environment "config.active_job.queue_adapter = :test", env: "test"
 
-init_gem "aasm"
-init_gem "pagy"
-init_gem "redis"
-init_gem "redis-objects"
-init_gem "rubocop"
-init_gem "rubocop-rails"
-init_gem "rubocop-rspec"
-init_gem "bcrypt"
-init_gem "benchmark-ips"
-init_gem "alba"
-init_gem "rack-attack"
-init_gem "sentry"
-init_gem "jwt"
-init_gem "pundit"
-# init_gem "rails-i18n"
-recipe "rspec"
+# Core recipes (gems with installation and configuration)
+recipe "aasm"
+recipe "alba"
+recipe "bcrypt"
+recipe "benchmark"
 recipe "config"
+recipe "jwt"
+recipe "pagy"
+recipe "pundit"
+recipe "rack_attack"
+recipe "redis"
+recipe "rspec"
+recipe "rubocop"
 recipe "sentry"
+
+# Configuration recipes (environment-specific settings)
+recipe "config/action_mailer"
+recipe "config/cors"
+recipe "config/log"
+recipe "config/puma"
+recipe "config/time_zone"
+
+# Application-wide configuration (all environments)
+environment <<~RUBY
+  # Silence healthcheck logs
+  config.silence_healthcheck_path = "/up"
+
+  # Allow additional hosts from environment variable
+  # Configure via ALLOWED_HOSTS env var (comma-separated)
+  # Example: ALLOWED_HOSTS="example.com,test.example.com,dev.example.com"
+  # Useful for Cloudflare Tunnel, ngrok, or custom domains
+  allowed_hosts = ENV.fetch("ALLOWED_HOSTS", "").split(",").map(&:strip).reject(&:empty?)
+  allowed_hosts.each { |host| config.hosts << host } unless allowed_hosts.empty?
+RUBY
+
 recipe "database_yml"
 recipe "uuidv7"
 recipe "action_storage"
@@ -116,3 +133,8 @@ recipe "openapi_doc"
 # recipe "google-cloud-storage"
 
 run "bundle install"
+
+# Auto-fix code style issues with RuboCop
+# This ensures the generated project follows RuboCop style guidelines
+say "Running RuboCop auto-corrections..."
+run "bundle exec rubocop -A"

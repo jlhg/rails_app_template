@@ -1,8 +1,11 @@
 require "net/http"
 require "uri"
 
-# Repository for collecting Locale data for Ruby on Rails I18n as well
-# as other interesting, Rails related I18n stuff http://rails-i18n.org
+# I18n (Internationalization) Configuration Recipe
+#
+# Repository for collecting Locale data for Ruby on Rails I18n
+# http://rails-i18n.org
+
 gem "rails-i18n"
 
 # I18n configuration
@@ -11,7 +14,7 @@ environment "config.i18n.available_locales = [:en, :\"zh-TW\"]"
 environment "config.i18n.fallbacks = [:en, :\"zh-TW\"]"
 
 # Load locale enforcement middleware
-initializer "locale.rb", <<-CODE
+initializer "locale.rb", <<~CODE
   # Enforce locale from Accept-Language header or default
   class LocaleMiddleware
     def initialize(app)

@@ -1,6 +1,11 @@
-# The ultimate pagination ruby gem. https://github.com/ddnexus/pagy
+# Pagy Pagination Configuration Recipe
+#
+# The ultimate pagination ruby gem
+# https://github.com/ddnexus/pagy
+
 gem "pagy"
-initializer "pagy.rb", <<-CODE
+
+initializer "pagy.rb", <<~CODE
   require "pagy/extras/overflow"
 
   Pagy::DEFAULT[:items] = 20

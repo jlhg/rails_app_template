@@ -5,7 +5,7 @@
 # Copy cable.yml configuration
 # Rails 8.1+ creates config/cable.yml by default, so we need to remove it first
 remove_file "config/cable.yml"
-copy_file "files/cable.yml", "config/cable.yml"
+copy_file from_files("cable.yml"), "config/cable.yml"
 
 # Mount ActionCable endpoint inside API scope
 inject_into_file "config/routes.rb", after: 'scope path: "/api", as: "api" do' do
@@ -67,11 +67,11 @@ create_file "app/channels/application_cable/connection.rb", <<~RUBY
               token,
               Rails.application.secret_key_base,
               true,
-              { algorithm: 'HS256' }
+              { algorithm: "HS256" }
             )
 
             # Find user by ID from token payload
-            user_id = decoded_token[0]['user_id']
+            user_id = decoded_token[0]["user_id"]
             user = User.find_by(id: user_id)
 
             return user if user.present?
@@ -88,8 +88,8 @@ create_file "app/channels/application_cable/connection.rb", <<~RUBY
         # Extract JWT token from Sec-WebSocket-Protocol header
         # Client should send: Sec-WebSocket-Protocol: protocol1, protocol2, jwt_token
         # The token is typically the last protocol in the list
-        if request.headers['Sec-WebSocket-Protocol'].present?
-          protocols = request.headers['Sec-WebSocket-Protocol'].split(',')
+        if request.headers["Sec-WebSocket-Protocol"].present?
+          protocols = request.headers["Sec-WebSocket-Protocol"].split(",")
           protocols.last&.strip
         end
       end
@@ -97,8 +97,8 @@ create_file "app/channels/application_cable/connection.rb", <<~RUBY
       def extract_token_from_header
         # Extract from Authorization header if present
         # Format: Authorization: Bearer jwt_token
-        if request.headers['Authorization'].present?
-          request.headers['Authorization'].split(' ').last
+        if request.headers["Authorization"].present?
+          request.headers["Authorization"].split.last
         end
       end
     end
@@ -181,7 +181,7 @@ initializer "action_cable_helpers.rb", <<-CODE
     #
     def self.broadcast_to_all(data)
       ActionCable.server.broadcast(
-        'global_notifications',
+        "global_notifications",
         data.merge(timestamp: Time.current.iso8601)
       )
     end

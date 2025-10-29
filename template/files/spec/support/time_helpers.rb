@@ -18,8 +18,7 @@ RSpec.configure do |config|
   end
 
   # Ensure time is unfrozen after each test to prevent leakage
-  config.after(:each) do
-    travel_back
+  config.after do
   end
 end
 

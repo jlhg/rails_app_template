@@ -56,7 +56,7 @@ RUBY
 
 # Add migration template for UUID tables with references
 # Template file: template/files/lib/templates/active_record/migration/create_table_migration.rb
-directory "files/lib", "lib"
+directory from_files("lib"), "lib"
 
 # NOTE: Migration generator will automatically use UUID for new tables.
 # The default value (uuidv7()) is set globally in config/initializers/uuidv7.rb

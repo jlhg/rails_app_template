@@ -1,4 +1,11 @@
 # CORS Configuration Initializer
+# Rails 8.1+ creates a commented-out cors.rb by default in API mode
+# Remove it first to avoid conflict
+
+gem "rack-cors"
+
+remove_file "config/initializers/cors.rb"
+
 initializer "cors.rb", <<~CODE
   # CORS (Cross-Origin Resource Sharing) Configuration
   #

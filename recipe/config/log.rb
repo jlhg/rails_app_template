@@ -10,6 +10,8 @@
 # Note: Health check endpoint is automatically silenced via config.silence_healthcheck_path
 # in config/application.rb
 
+gem "lograge"
+
 # Production environment: Structured JSON logs with Lograge
 environment <<~RUBY, env: "production"
   # Enable Lograge for structured single-line logs

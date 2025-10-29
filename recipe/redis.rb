@@ -1,3 +1,5 @@
+# Redis / Valkey Configuration Recipe
+#
 # A Ruby client library for Valkey/Redis.
 # https://github.com/redis/redis-rb
 #
@@ -10,11 +12,16 @@
 # - Better performance (3x throughput in Valkey 8.0)
 # - Fully open source (BSD-3), no licensing concerns
 # - redis-rb gem officially supports Valkey 7.2+, 8.x
+
 gem "redis"
 
 # Connection pooling for Valkey/Redis (required for ActionCable and multi-threaded servers)
 # https://github.com/mperham/connection_pool
 gem "connection_pool"
+
+# Map Redis types directly to Ruby objects
+# https://github.com/nateware/redis-objects
+gem "redis-objects"
 
 initializer "redis.rb", <<~'CODE'
   # Multiple Valkey/Redis instances for different purposes
@@ -26,13 +33,13 @@ initializer "redis.rb", <<~'CODE'
 
   # Helper method to build Valkey/Redis URL with Docker secrets support
   def build_redis_url(host:, port:, db: 0, password_file: nil, password: nil)
-    pwd = if password_file && File.exist?(password_file)
-      File.read(password_file).strip
+    if password_file && File.exist?(password_file)
+      pwd = File.read(password_file).strip
     elsif password
-      password
+      pwd = password
     end
 
-    if pwd && !pwd.empty?
+    if pwd.present?
       "redis://:#{pwd}@#{host}:#{port}/#{db}"
     else
       "redis://#{host}:#{port}/#{db}"
@@ -40,15 +47,15 @@ initializer "redis.rb", <<~'CODE'
   end
 
   # Pool size should match RAILS_MAX_THREADS for optimal performance
-  pool_size = ENV.fetch('RAILS_MAX_THREADS', 16).to_i
+  pool_size = ENV.fetch("RAILS_MAX_THREADS", 16).to_i
 
   # Valkey Cache (Rails.cache, Rack::Attack, temporary data)
   cache_url = build_redis_url(
-    host: ENV.fetch('REDIS_CACHE_HOST', 'localhost'),
-    port: ENV.fetch('REDIS_CACHE_PORT', 6379),
-    db: 0,
-    password_file: ENV['REDIS_CACHE_PASSWORD_FILE'],
-    password: ENV['REDIS_CACHE_PASSWORD']
+    host:          ENV.fetch("REDIS_CACHE_HOST", "localhost"),
+    port:          ENV.fetch("REDIS_CACHE_PORT", 6379),
+    db:            0,
+    password_file: ENV.fetch("REDIS_CACHE_PASSWORD_FILE", nil),
+    password:      ENV.fetch("REDIS_CACHE_PASSWORD", nil)
   )
 
   REDIS_CACHE = ConnectionPool.new(size: pool_size, timeout: 5) do
@@ -57,11 +64,11 @@ initializer "redis.rb", <<~'CODE'
 
   # Valkey Session (Access tokens, user sessions, important state)
   session_url = build_redis_url(
-    host: ENV.fetch('REDIS_SESSION_HOST', 'localhost'),
-    port: ENV.fetch('REDIS_SESSION_PORT', 6379),
-    db: 0,
-    password_file: ENV['REDIS_SESSION_PASSWORD_FILE'],
-    password: ENV['REDIS_SESSION_PASSWORD']
+    host:          ENV.fetch("REDIS_SESSION_HOST", "localhost"),
+    port:          ENV.fetch("REDIS_SESSION_PORT", 6379),
+    db:            0,
+    password_file: ENV.fetch("REDIS_SESSION_PASSWORD_FILE", nil),
+    password:      ENV.fetch("REDIS_SESSION_PASSWORD", nil)
   )
 
   REDIS_SESSION = ConnectionPool.new(size: pool_size, timeout: 5) do
@@ -70,11 +77,11 @@ initializer "redis.rb", <<~'CODE'
 
   # Configure Rails cache store to use Valkey Cache
   Rails.application.config.cache_store = :redis_cache_store, {
-    url: cache_url,
+    url:                cache_url,
     reconnect_attempts: 3,
-    pool_size: pool_size,
-    pool_timeout: 5,
-    error_handler: -> (method:, returning:, exception:) {
+    pool_size:          pool_size,
+    pool_timeout:       5,
+    error_handler:      lambda { |_method:, _returning:, exception:|
       Rails.logger.error("Valkey cache error: #{exception.class} - #{exception.message}")
     }
   }
