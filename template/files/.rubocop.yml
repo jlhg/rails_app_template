@@ -149,9 +149,20 @@ RSpec/MultipleExpectations:
   Max: 5
 
 # API integration tests include: test data setup, request execution, and response validation
-# Default Max: 5 is often too short for meaningful integration tests
+# Set to 20 to accommodate complex integration scenarios while still encouraging clarity
 RSpec/ExampleLength:
-  Max: 10
+  Max: 20
+  # Count certain constructs as one line to avoid penalizing readable code
+  CountAsOne:
+    - array
+    - hash
+    - heredoc
+
+# Task specs legitimately need before(:all) for loading Rake tasks once
+# This is a performance optimization, not a code smell
+RSpec/BeforeAfterAll:
+  Exclude:
+    - 'spec/tasks/**/*_spec.rb'
 
 # API tests often organize by: controller -> action -> context -> edge cases
 # Default Max: 3 can be limiting for comprehensive API test organization
