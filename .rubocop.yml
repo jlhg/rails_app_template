@@ -17,6 +17,9 @@ AllCops:
 Rails/RakeEnvironment:
   Exclude:
     - 'Rakefile'
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_first_argument
 Layout/FirstArgumentIndentation:
   EnforcedStyle: special_for_inner_method_call_in_parentheses
 Layout/FirstHashElementIndentation:
@@ -27,8 +30,6 @@ Layout/HashAlignment:
   EnforcedColonStyle: table
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented_relative_to_receiver
-Layout/LineLength:
-  Enabled: false
 Lint/ConstantDefinitionInBlock:
   Enabled: false
 Lint/DuplicateBranch:
@@ -145,4 +146,3 @@ Naming/FileName:
 Security/Eval:
   Exclude:
     - 'lib/base.rb'
-
