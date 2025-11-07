@@ -1,5 +1,10 @@
 name: "rails-app-test"
 
+x-common: &common
+  env_file:
+    - .env.example
+    - .env
+
 x-pg-common: &pg-common
   image: postgres:18-alpine
   healthcheck:
@@ -11,62 +16,52 @@ x-pg-common: &pg-common
   expose:
     - 5432
 
-# Shared rails service configuration
 x-rails-common: &rails-common
+  image: local/rails-app:test
   build:
     context: .
     args:
-      # Set custom GitLab host if using self-hosted GitLab
-      GITLAB_HOST: ${GITLAB_HOST:-gitlab.com}
-      # Git commit SHA for Sentry release tracking
-      REVISION: ${REVISION:-}
-      # Test build configuration
       RAILS_ENV: test
       BUNDLE_DEPLOYMENT: false
       BUNDLE_WITHOUT: ""
       USER_ID: ${UID:-1000}
       GROUP_ID: ${GID:-1000}
-  env_file:
-    - .env
   depends_on:
     pg:
       condition: service_healthy
-  environment:
-    APP_RAILS_MAX_THREADS: 5
-    APP_RAILS_MIN_THREADS: 5
-    APP_WEB_CONCURRENCY: 0
 
 services:
-  # PostgreSQL Database
   pg:
-    <<: *pg-common
+    <<: [*common, *pg-common]
     environment:
-      POSTGRES_USER: ${APP_POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: ${APP_POSTGRES_PASSWORD_FILE}
+      POSTGRES_USER: ${APP_POSTGRES_USER}
       POSTGRES_DB: ${APP_POSTGRES_DB}
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
     secrets:
-      - database_password
-
-  # Rails Test Service
+      - pg_password
   rails:
-    <<: *rails-common
+    <<: [*common, *rails-common]
+    environment:
+      APP_RAILS_MAX_THREADS: 5
+      APP_RAILS_MIN_THREADS: 5
+      APP_WEB_CONCURRENCY: 0
     volumes:
       - .:/rails
-      - rails-logs:/rails/log
-      - rails-tmp:/rails/tmp
+      - rails_logs:/rails/log
+      - rails_tmp:/rails/tmp
     secrets:
-      - database_password
+      - pg_password
       - rails_secret_key_base
 
+volumes:
+  pg_data:
+  rails_logs:
+  rails_tmp:
+
 secrets:
-  database_password:
-    file: ./.secrets/database_password
+  pg_password:
+    file: ./.secrets/pg_password
   rails_secret_key_base:
     file: ./.secrets/rails_secret_key_base
-
-volumes:
-  pg-data:
-  rails-logs:
-  rails-tmp:

@@ -1,73 +1,56 @@
-name: "rails-app"
+x-common: &common
+  env_file:
+    - .env.example
+    - .env
+  networks:
+    - rails_app
 
-x-healthcheck-default: &healthcheck-default
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 40s
+x-pg-common: &pg-common
+  image: postgres:18-alpine
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+  expose:
+    - 5432
 
-# Shared rails service configuration
+x-redis-common: &redis-common
+  image: valkey/valkey:8-alpine
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 5s
+  expose:
+    - 6379
+
 x-rails-common: &rails-common
+  image: local/rails_app:latest
   build:
     context: .
     args:
-      # Set custom GitLab host if using self-hosted GitLab
-      # Default: gitlab.com
-      GITLAB_HOST: ${GITLAB_HOST:-gitlab.com}
-      # Git commit SHA for Sentry release tracking
-      # Set via: REVISION=$(git rev-parse --short HEAD) docker compose build
-      # Or add REVISION to .env file
-      REVISION: ${REVISION:-}
-    # secrets:
-    #   - github_pat
-    #   - gitlab_pat
-  env_file:
-    - .env
-  restart: unless-stopped
-  volumes:
-    - rails-logs:/rails/log
-  depends_on:
-    pg:
-      condition: service_healthy
-    redis_cache:
-      condition: service_healthy
-    redis_cable:
-      condition: service_healthy
-    redis_session:
-      condition: service_healthy
-  secrets:
-    - database_password
-    - redis_cache_password
-    - redis_cable_password
-    - redis_session_password
-    - rails_secret_key_base
-    - mailer_smtp_password
+      # Sentry release tracking (optional, for correlating errors with deployments)
+      # REVISION is set during Docker build and baked into the image
+      REVISION: ${REVISION}
 
 services:
-  # PostgreSQL Database
   pg:
-    image: postgres:18-alpine
-    restart: unless-stopped
-    healthcheck:
-      <<: *healthcheck-default
-      test: ["CMD-SHELL", "pg_isready"]
-    volumes:
-      - pg-data:/var/lib/postgresql/data
+    <<: [*common, *pg-common]
     environment:
-      POSTGRES_USER: ${APP_POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: ${APP_POSTGRES_PASSWORD_FILE}
+      POSTGRES_USER: ${APP_POSTGRES_USER}
       POSTGRES_DB: ${APP_POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
     secrets:
-      - database_password
-    expose:
-      - 5432
-
-  # Valkey Cache (Rails.cache, rate limiting)
-  # Valkey is 100% compatible with Redis, fully open source (BSD-3)
-  # Policy: allkeys-lru (can evict old data)
+      - pg_password
   redis_cache:
-    image: valkey/valkey:8-alpine
-    restart: unless-stopped
+    <<: [*common, *redis-common]
+    volumes:
+      - redis_cache_data:/data
     command:
       - sh
       - -c
@@ -77,27 +60,12 @@ services:
           --maxmemory 1gb \
           --maxmemory-policy allkeys-lru \
           --save ""
-    healthcheck:
-      <<: *healthcheck-default
-      test:
-        - CMD
-        - sh
-        - -c
-        - |
-          redis-cli -a "$$(cat $$APP_REDIS_CACHE_PASSWORD_FILE)" ping | grep PONG
-    volumes:
-      - redis-cache-data:/data
     secrets:
       - redis_cache_password
-    expose:
-      - 6379
-
-  # Valkey Cable (ActionCable WebSocket pub/sub)
-  # Valkey is 100% compatible with Redis, fully open source (BSD-3)
-  # Policy: noeviction (pub/sub cannot be evicted)
   redis_cable:
-    image: valkey/valkey:8-alpine
-    restart: unless-stopped
+    <<: [*common, *redis-common]
+    volumes:
+      - redis_cable_data:/data
     command:
       - sh
       - -c
@@ -107,28 +75,12 @@ services:
           --maxmemory 512mb \
           --maxmemory-policy noeviction \
           --save ""
-    healthcheck:
-      <<: *healthcheck-default
-      test:
-        - CMD
-        - sh
-        - -c
-        - |
-          redis-cli -a "$$(cat $$APP_REDIS_CABLE_PASSWORD_FILE)" ping | grep PONG
-    volumes:
-      - redis-cable-data:/data
     secrets:
       - redis_cable_password
-    expose:
-      - 6379
-
-  # Valkey Session (Access tokens, user sessions, important state)
-  # Valkey is 100% compatible with Redis, fully open source (BSD-3)
-  # Policy: noeviction (cannot evict important data)
-  # Persistence: Yes (AOF for durability)
   redis_session:
-    image: valkey/valkey:8-alpine
-    restart: unless-stopped
+    <<: [*common, *redis-common]
+    volumes:
+      - redis_session_data:/data
     command:
       - sh
       - -c
@@ -139,44 +91,56 @@ services:
           --maxmemory-policy noeviction \
           --appendonly yes \
           --appendfsync everysec
-    healthcheck:
-      <<: *healthcheck-default
-      test:
-        - CMD
-        - sh
-        - -c
-        - |
-          redis-cli -a "$$(cat $$APP_REDIS_SESSION_PASSWORD_FILE)" ping | grep PONG
-    volumes:
-      - redis-session-data:/data
     secrets:
       - redis_session_password
-    expose:
-      - 6379
-
-  # Rails Web Service
   rails:
-    <<: *rails-common
+    <<: [*common, *rails-common]
     healthcheck:
-      <<: *healthcheck-default
-      test: ['CMD', 'curl', '-fsS', 'http://localhost:3000/up']
-    stop_signal: SIGTERM       # Signal to send (SIGTERM is default, explicit for clarity)
-    stop_grace_period: 40s     # Wait up to 40s for graceful shutdown before sending SIGKILL
-                               # PUMA_WORKER_TIMEOUT (default 30s) + 10s buffer for cleanup
+      test: ['CMD', "curl", "-fsS", "http://localhost:3000/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    stop_signal: SIGTERM
+    stop_grace_period: 40s
     expose:
       - 3000
-
+    volumes:
+      - rails_logs:/rails/log
+      - rails_tmp:/rails/tmp
+    secrets:
+      - pg_password
+      - redis_cache_password
+      - redis_cable_password
+      - redis_session_password
+      - rails_secret_key_base
+      - mailer_smtp_password
   cloudflared:
     image: cloudflare/cloudflared:latest
-    restart: "no"
-    command: tunnel run --token-file /run/secrets/cf_tunnel_token
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "--metrics", "localhost:2000", "ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    command: tunnel --metrics 0.0.0.0:2000 run --token-file /run/secrets/cf_tunnel_token
     secrets:
       - cf_tunnel_token
+    networks:
+      - rails_app
+
+volumes:
+  pg_data:
+  redis_cache_data:
+  redis_cable_data:
+  redis_session_data:
+  rails_logs:
+  rails_tmp:
 
 secrets:
-  database_password:
+  pg_password:
     external: true
-    name: rails_app_database_password
+    name: rails_app_pg_password
   redis_cache_password:
     external: true
     name: rails_app_redis_cache_password
@@ -196,9 +160,6 @@ secrets:
     external: true
     name: rails_app_cf_tunnel_token
 
-volumes:
-  rails-logs:
-  pg-data:
-  redis-cache-data:
-  redis-cable-data:
-  redis-session-data:
+networks:
+  rails_app:
+    external: true

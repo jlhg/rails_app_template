@@ -1,10 +1,11 @@
 name: "rails-app-dev"
 
-x-healthcheck-default: &healthcheck-default
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 40s
+x-common: &common
+  env_file:
+    - .env.example
+    - .env
+  networks:
+    - rails_app_dev
 
 x-pg-common: &pg-common
   image: postgres:18-alpine
@@ -28,24 +29,16 @@ x-redis-common: &redis-common
   expose:
     - 6379
 
-# Shared rails service configuration
 x-rails-common: &rails-common
+  image: local/rails-app:dev
   build:
     context: .
     args:
-      # Set custom GitLab host if using self-hosted GitLab
-      GITLAB_HOST: ${GITLAB_HOST:-gitlab.com}
-      # Git commit SHA for Sentry release tracking
-      REVISION: ${REVISION:-}
-      # Development build configuration
       RAILS_ENV: development
       BUNDLE_DEPLOYMENT: false
       BUNDLE_WITHOUT: ""
       USER_ID: ${UID:-1000}
       GROUP_ID: ${GID:-1000}
-  env_file:
-    - .env
-  restart: unless-stopped
   depends_on:
     pg:
       condition: service_healthy
@@ -55,30 +48,22 @@ x-rails-common: &rails-common
       condition: service_healthy
     redis_session:
       condition: service_healthy
-  environment:
-    APP_RAILS_MAX_THREADS: 5
-    APP_RAILS_MIN_THREADS: 5
-    APP_WEB_CONCURRENCY: 0
-    APP_SESSION_COOKIE_SAME_SITE: none
 
 services:
-  # PostgreSQL Database
   pg:
-    <<: *pg-common
+    <<: [*common, *pg-common]
     environment:
-      POSTGRES_USER: ${APP_POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: ${APP_POSTGRES_PASSWORD_FILE}
+      POSTGRES_USER: ${APP_POSTGRES_USER}
       POSTGRES_DB: ${APP_POSTGRES_DB}
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
     secrets:
-      - database_password
-
-  # Valkey Cache (Rails.cache, rate limiting)
+      - pg_password
   redis_cache:
-    <<: *redis-common
+    <<: [*common, *redis-common]
     volumes:
-      - redis-cache-data:/data
+      - redis_cache_data:/data
     command:
       - sh
       - -c
@@ -90,12 +75,10 @@ services:
           --save ""
     secrets:
       - redis_cache_password
-
-  # Valkey Cable (ActionCable WebSocket pub/sub)
   redis_cable:
-    <<: *redis-common
+    <<: [*common, *redis-common]
     volumes:
-      - redis-cable-data:/data
+      - redis_cable_data:/data
     command:
       - sh
       - -c
@@ -107,12 +90,10 @@ services:
           --save ""
     secrets:
       - redis_cable_password
-
-  # Valkey Session (Access tokens, user sessions, important state)
   redis_session:
-    <<: *redis-common
+    <<: [*common, *redis-common]
     volumes:
-      - redis-session-data:/data
+      - redis_session_data:/data
     command:
       - sh
       - -c
@@ -125,39 +106,59 @@ services:
           --appendfsync everysec
     secrets:
       - redis_session_password
-
-  # Rails Web Service
   rails:
-    <<: *rails-common
+    <<: [*common, *rails-common]
     healthcheck:
-      <<: *healthcheck-default
-      test: ['CMD', 'curl', '-fsS', 'http://localhost:3000/up']
+      test: ['CMD', "curl", "-fsS", "http://localhost:3000/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     stop_signal: SIGTERM
     stop_grace_period: 10s
+    environment:
+      APP_RAILS_MAX_THREADS: 5
+      APP_RAILS_MIN_THREADS: 5
+      APP_WEB_CONCURRENCY: 0
+      APP_SESSION_COOKIE_SAME_SITE: none
     expose:
       - 3000
     volumes:
       - .:/rails
-      - rails-logs:/rails/log
-      - rails-tmp:/rails/tmp
+      - rails_logs:/rails/log
+      - rails_tmp:/rails/tmp
     secrets:
-      - database_password
+      - pg_password
       - redis_cache_password
       - redis_cable_password
       - redis_session_password
       - rails_secret_key_base
       - mailer_smtp_password
-
   cloudflared:
     image: cloudflare/cloudflared:latest
-    restart: "no"
-    command: tunnel run --token-file /run/secrets/cf_tunnel_token
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "--metrics", "localhost:2000", "ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    command: tunnel --metrics 0.0.0.0:2000 run --token-file /run/secrets/cf_tunnel_token
     secrets:
       - cf_tunnel_token
+    networks:
+      - rails_app_dev
+
+volumes:
+  pg_data:
+  redis_cache_data:
+  redis_cable_data:
+  redis_session_data:
+  rails_logs:
+  rails_tmp:
 
 secrets:
-  database_password:
-    file: ./.secrets/database_password
+  pg_password:
+    file: ./.secrets/pg_password
   redis_cache_password:
     file: ./.secrets/redis_cache_password
   redis_cable_password:
@@ -171,10 +172,6 @@ secrets:
   cf_tunnel_token:
     file: ./.secrets/cf_tunnel_token
 
-volumes:
-  rails-logs:
-  rails-tmp:
-  pg-data:
-  redis-cache-data:
-  redis-cable-data:
-  redis-session-data:
+networks:
+  rails_app_dev:
+    external: true
