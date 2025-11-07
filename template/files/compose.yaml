@@ -35,43 +35,6 @@ x-rails-common: &rails-common
       condition: service_healthy
     redis_session:
       condition: service_healthy
-  environment:
-    - RAILS_ENV=${RAILS_ENV:-production}
-    - RUBY_YJIT_ENABLE=${RUBY_YJIT_ENABLE:-1}
-    - RUBYOPT=${RUBYOPT:---enable-frozen-string-literal}
-    # Puma web server configuration
-    - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
-    - RAILS_MAX_THREADS=${RAILS_MAX_THREADS:-16}
-    - RAILS_MIN_THREADS=${RAILS_MIN_THREADS:-16}
-    - PUMA_WORKER_TIMEOUT=${PUMA_WORKER_TIMEOUT:-30}
-    # Database configuration (alternative to DATABASE_URL)
-    - DATABASE_HOST=${DATABASE_HOST:-pg}
-    - DATABASE_PORT=${DATABASE_PORT:-5432}
-    - DATABASE_NAME=${DATABASE_NAME:-app_production}
-    - DATABASE_USER=${DATABASE_USER:-postgres}
-    - DATABASE_PASSWORD_FILE=${DATABASE_PASSWORD_FILE:-/run/secrets/database_password}
-    # Redis Cache (Rails.cache, rate limiting)
-    - REDIS_CACHE_HOST=${REDIS_CACHE_HOST:-redis_cache}
-    - REDIS_CACHE_PORT=${REDIS_CACHE_PORT:-6379}
-    - REDIS_CACHE_PASSWORD_FILE=${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
-    # Redis Cable (ActionCable WebSocket pub/sub)
-    - REDIS_CABLE_HOST=${REDIS_CABLE_HOST:-redis_cable}
-    - REDIS_CABLE_PORT=${REDIS_CABLE_PORT:-6379}
-    - REDIS_CABLE_PASSWORD_FILE=${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
-    # Redis Session (Access tokens, user sessions)
-    - REDIS_SESSION_HOST=${REDIS_SESSION_HOST:-redis_session}
-    - REDIS_SESSION_PORT=${REDIS_SESSION_PORT:-6379}
-    - REDIS_SESSION_PASSWORD_FILE=${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
-    # ActionCable WebSocket configuration
-    - ACTION_CABLE_URL=${ACTION_CABLE_URL:-ws://localhost:3000/cable}
-    - ACTION_CABLE_ALLOWED_ORIGINS=${ACTION_CABLE_ALLOWED_ORIGINS:-*}
-    - ACTION_CABLE_DISABLE_FORGERY_PROTECTION=${ACTION_CABLE_DISABLE_FORGERY_PROTECTION:-true}
-    # Rails secret key
-    - SECRET_KEY_BASE_FILE=${SECRET_KEY_BASE_FILE:-/run/secrets/rails_secret_key_base}
-    # Action Mailer SMTP configuration
-    - MAILER_SMTP_PASSWORD_FILE=${MAILER_SMTP_PASSWORD_FILE:-/run/secrets/mailer_smtp_password}
-    # Database preparation (set to true only when needed: first deploy, migrations, schema changes)
-    - RAILS_DB_PREPARE=${RAILS_DB_PREPARE:-false}
   secrets:
     - database_password
     - redis_cache_password
@@ -87,13 +50,13 @@ services:
     restart: unless-stopped
     healthcheck:
       <<: *healthcheck-default
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready"]
     volumes:
       - pg-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=${DATABASE_USER:-postgres}
-      - POSTGRES_PASSWORD_FILE=${DATABASE_PASSWORD_FILE:-/run/secrets/database_password}
-      - POSTGRES_DB=${DATABASE_NAME:-app_production}
+      POSTGRES_USER: ${APP_POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: ${APP_POSTGRES_PASSWORD_FILE}
+      POSTGRES_DB: ${APP_POSTGRES_DB}
     secrets:
       - database_password
     expose:
@@ -105,15 +68,15 @@ services:
   redis_cache:
     image: valkey/valkey:8-alpine
     restart: unless-stopped
-    command: >
-      sh -c '
-        REDIS_PASS_FILE=$${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
-        redis-server
-        --requirepass "$$(cat $$REDIS_PASS_FILE)"
-        --maxmemory 1gb
-        --maxmemory-policy allkeys-lru
-        --save ""
-      '
+    command:
+      - sh
+      - -c
+      - |
+        redis-server \
+          --requirepass "$$(cat $$APP_REDIS_CACHE_PASSWORD_FILE)" \
+          --maxmemory 1gb \
+          --maxmemory-policy allkeys-lru \
+          --save ""
     healthcheck:
       <<: *healthcheck-default
       test:
@@ -121,12 +84,9 @@ services:
         - sh
         - -c
         - |
-          REDIS_PASS_FILE=$${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
-          redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+          redis-cli -a "$$(cat $$APP_REDIS_CACHE_PASSWORD_FILE)" ping | grep PONG
     volumes:
       - redis-cache-data:/data
-    environment:
-      - REDIS_CACHE_PASSWORD_FILE=${REDIS_CACHE_PASSWORD_FILE:-/run/secrets/redis_cache_password}
     secrets:
       - redis_cache_password
     expose:
@@ -138,15 +98,15 @@ services:
   redis_cable:
     image: valkey/valkey:8-alpine
     restart: unless-stopped
-    command: >
-      sh -c '
-        REDIS_PASS_FILE=$${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
-        redis-server
-        --requirepass "$$(cat $$REDIS_PASS_FILE)"
-        --maxmemory 512mb
-        --maxmemory-policy noeviction
-        --save ""
-      '
+    command:
+      - sh
+      - -c
+      - |
+        redis-server \
+          --requirepass "$$(cat $$APP_REDIS_CABLE_PASSWORD_FILE)" \
+          --maxmemory 512mb \
+          --maxmemory-policy noeviction \
+          --save ""
     healthcheck:
       <<: *healthcheck-default
       test:
@@ -154,12 +114,9 @@ services:
         - sh
         - -c
         - |
-          REDIS_PASS_FILE=$${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
-          redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+          redis-cli -a "$$(cat $$APP_REDIS_CABLE_PASSWORD_FILE)" ping | grep PONG
     volumes:
       - redis-cable-data:/data
-    environment:
-      - REDIS_CABLE_PASSWORD_FILE=${REDIS_CABLE_PASSWORD_FILE:-/run/secrets/redis_cable_password}
     secrets:
       - redis_cable_password
     expose:
@@ -172,16 +129,16 @@ services:
   redis_session:
     image: valkey/valkey:8-alpine
     restart: unless-stopped
-    command: >
-      sh -c '
-        REDIS_PASS_FILE=$${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
-        redis-server
-        --requirepass "$$(cat $$REDIS_PASS_FILE)"
-        --maxmemory 512mb
-        --maxmemory-policy noeviction
-        --appendonly yes
-        --appendfsync everysec
-      '
+    command:
+      - sh
+      - -c
+      - |
+        redis-server \
+          --requirepass "$$(cat $$APP_REDIS_SESSION_PASSWORD_FILE)" \
+          --maxmemory 512mb \
+          --maxmemory-policy noeviction \
+          --appendonly yes \
+          --appendfsync everysec
     healthcheck:
       <<: *healthcheck-default
       test:
@@ -189,12 +146,9 @@ services:
         - sh
         - -c
         - |
-          REDIS_PASS_FILE=$${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
-          redis-cli -a "$$(cat $$REDIS_PASS_FILE)" ping | grep PONG
+          redis-cli -a "$$(cat $$APP_REDIS_SESSION_PASSWORD_FILE)" ping | grep PONG
     volumes:
       - redis-session-data:/data
-    environment:
-      - REDIS_SESSION_PASSWORD_FILE=${REDIS_SESSION_PASSWORD_FILE:-/run/secrets/redis_session_password}
     secrets:
       - redis_session_password
     expose:
@@ -221,23 +175,26 @@ services:
 
 secrets:
   database_password:
-    file: ./.secrets/database_password
+    external: true
+    name: rails_app_database_password
   redis_cache_password:
-    file: ./.secrets/redis_cache_password
+    external: true
+    name: rails_app_redis_cache_password
   redis_cable_password:
-    file: ./.secrets/redis_cable_password
+    external: true
+    name: rails_app_redis_cable_password
   redis_session_password:
-    file: ./.secrets/redis_session_password
+    external: true
+    name: rails_app_redis_session_password
   rails_secret_key_base:
-    file: ./.secrets/rails_secret_key_base
+    external: true
+    name: rails_app_rails_secret_key_base
   mailer_smtp_password:
-    file: ./.secrets/mailer_smtp_password
+    external: true
+    name: rails_app_mailer_smtp_password
   cf_tunnel_token:
-    file: ./.secrets/cf_tunnel_token
-  # github_pat:
-  #   file: ./.secrets/github_pat
-  # gitlab_pat:
-  #   file: ./.secrets/gitlab_pat
+    external: true
+    name: rails_app_cf_tunnel_token
 
 volumes:
   rails-logs:

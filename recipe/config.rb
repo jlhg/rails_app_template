@@ -1,25 +1,26 @@
 # Configuration Management
 #
-# This template uses three configuration systems:
-# 1. ENV variables (.env)        - Environment configuration (host, port, database, threads, CORS)
-# 2. Docker Secrets (.secrets/)  - Sensitive data (passwords, API keys, tokens)
-# 3. Settings (settings.yml)     - Business logic (timeout, limits, rules, feature flags)
+# This template uses anyway_config for unified configuration management:
+# 1. ENV variables with APP_ prefix  - All application configuration
+# 2. Docker Secrets (.secrets/)      - Sensitive data (passwords, API keys, tokens)
 #
-# Examples of business logic configuration (use Settings):
-# - Token expiration times: Settings.access_token_expired_time
-# - Business limits: Settings.max_upload_size, Settings.max_retry_times
-# - Feature flags: Settings.enable_chatgpt, Settings.enable_sentry
-# - Business rules: Settings.allowed_ip_addresses, Settings.default_avatar_url
-# - Timeout settings: Settings.job_timeout, Settings.api_timeout
+# All environment variables use APP_ prefix (e.g., APP_POSTGRES_HOST)
+# Access configuration via: AppConfig.instance.postgres_host
 #
-# Note: config gem is installed but settings.yml is empty by default.
-# Add your business logic configuration as needed.
+# Examples:
+# - Database: AppConfig.instance.postgres_host
+# - Redis: AppConfig.instance.redis_cache_host
+# - Mailer: AppConfig.instance.mailer_smtp_address
+# - Session: AppConfig.instance.session_expire_after
+# - Sentry: AppConfig.instance.sentry_dsn
+#
+# Docker secrets are read via *_file attributes (e.g., postgres_password_file)
+# and accessed via helper methods (e.g., postgres_password)
 
-gem "config"
+gem "anyway_config", "~> 2.0"
 
-generate "config:install"
+# Create config/configs directory for configuration classes
+empty_directory "config/configs"
 
-# Rename config.rb to _config.rb to ensure it loads first (alphabetical order)
-inside("config/initializers") do
-  run("mv config.rb _config.rb")
-end
+# Copy AppConfig class
+copy_file from_files("config/configs/app_config.rb"), "config/configs/app_config.rb"

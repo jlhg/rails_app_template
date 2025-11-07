@@ -1,0 +1,180 @@
+name: "rails-app-dev"
+
+x-healthcheck-default: &healthcheck-default
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-pg-common: &pg-common
+  image: postgres:18-alpine
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+  expose:
+    - 5432
+
+x-redis-common: &redis-common
+  image: valkey/valkey:8-alpine
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 5s
+  expose:
+    - 6379
+
+# Shared rails service configuration
+x-rails-common: &rails-common
+  build:
+    context: .
+    args:
+      # Set custom GitLab host if using self-hosted GitLab
+      GITLAB_HOST: ${GITLAB_HOST:-gitlab.com}
+      # Git commit SHA for Sentry release tracking
+      REVISION: ${REVISION:-}
+      # Development build configuration
+      RAILS_ENV: development
+      BUNDLE_DEPLOYMENT: false
+      BUNDLE_WITHOUT: ""
+      USER_ID: ${UID:-1000}
+      GROUP_ID: ${GID:-1000}
+  env_file:
+    - .env
+  restart: unless-stopped
+  depends_on:
+    pg:
+      condition: service_healthy
+    redis_cache:
+      condition: service_healthy
+    redis_cable:
+      condition: service_healthy
+    redis_session:
+      condition: service_healthy
+  environment:
+    APP_RAILS_MAX_THREADS: 5
+    APP_RAILS_MIN_THREADS: 5
+    APP_WEB_CONCURRENCY: 0
+    APP_SESSION_COOKIE_SAME_SITE: none
+
+services:
+  # PostgreSQL Database
+  pg:
+    <<: *pg-common
+    environment:
+      POSTGRES_USER: ${APP_POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: ${APP_POSTGRES_PASSWORD_FILE}
+      POSTGRES_DB: ${APP_POSTGRES_DB}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    secrets:
+      - database_password
+
+  # Valkey Cache (Rails.cache, rate limiting)
+  redis_cache:
+    <<: *redis-common
+    volumes:
+      - redis-cache-data:/data
+    command:
+      - sh
+      - -c
+      - |
+        redis-server \
+          --requirepass "$$(cat $$APP_REDIS_CACHE_PASSWORD_FILE)" \
+          --maxmemory 1gb \
+          --maxmemory-policy allkeys-lru \
+          --save ""
+    secrets:
+      - redis_cache_password
+
+  # Valkey Cable (ActionCable WebSocket pub/sub)
+  redis_cable:
+    <<: *redis-common
+    volumes:
+      - redis-cable-data:/data
+    command:
+      - sh
+      - -c
+      - |
+        redis-server \
+          --requirepass "$$(cat $$APP_REDIS_CABLE_PASSWORD_FILE)" \
+          --maxmemory 512mb \
+          --maxmemory-policy noeviction \
+          --save ""
+    secrets:
+      - redis_cable_password
+
+  # Valkey Session (Access tokens, user sessions, important state)
+  redis_session:
+    <<: *redis-common
+    volumes:
+      - redis-session-data:/data
+    command:
+      - sh
+      - -c
+      - |
+        redis-server \
+          --requirepass "$$(cat $$APP_REDIS_SESSION_PASSWORD_FILE)" \
+          --maxmemory 512mb \
+          --maxmemory-policy noeviction \
+          --appendonly yes \
+          --appendfsync everysec
+    secrets:
+      - redis_session_password
+
+  # Rails Web Service
+  rails:
+    <<: *rails-common
+    healthcheck:
+      <<: *healthcheck-default
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:3000/up']
+    stop_signal: SIGTERM
+    stop_grace_period: 10s
+    expose:
+      - 3000
+    volumes:
+      - .:/rails
+      - rails-logs:/rails/log
+      - rails-tmp:/rails/tmp
+    secrets:
+      - database_password
+      - redis_cache_password
+      - redis_cable_password
+      - redis_session_password
+      - rails_secret_key_base
+      - mailer_smtp_password
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: "no"
+    command: tunnel run --token-file /run/secrets/cf_tunnel_token
+    secrets:
+      - cf_tunnel_token
+
+secrets:
+  database_password:
+    file: ./.secrets/database_password
+  redis_cache_password:
+    file: ./.secrets/redis_cache_password
+  redis_cable_password:
+    file: ./.secrets/redis_cable_password
+  redis_session_password:
+    file: ./.secrets/redis_session_password
+  rails_secret_key_base:
+    file: ./.secrets/rails_secret_key_base
+  mailer_smtp_password:
+    file: ./.secrets/mailer_smtp_password
+  cf_tunnel_token:
+    file: ./.secrets/cf_tunnel_token
+
+volumes:
+  rails-logs:
+  rails-tmp:
+  pg-data:
+  redis-cache-data:
+  redis-cable-data:
+  redis-session-data:

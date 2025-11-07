@@ -1,35 +1,29 @@
 # ActionCable configuration for WebSocket support
 # Uses dedicated Redis instance (redis_cable) for pub/sub
-# Supports Docker secrets via REDIS_CABLE_PASSWORD_FILE
+# Supports Docker secrets via password_file
 
 default: &default
   adapter: redis
-  <% if ENV['REDIS_CABLE_URL'] %>
-  # Use REDIS_CABLE_URL if provided (traditional approach)
-  url: <%= ENV['REDIS_CABLE_URL'] %>
-  <% else %>
-  # Build URL from individual components (better for Docker secrets)
+  # Build URL from AppConfig
   url: <%=
-    host = ENV.fetch('REDIS_CABLE_HOST', 'localhost')
-    port = ENV.fetch('REDIS_CABLE_PORT', 6379)
+    host = AppConfig.instance.redis_cable_host
+    port = AppConfig.instance.redis_cable_port
+    password_file = AppConfig.instance.redis_cable_password_file
     db = 0  # Always use DB 0 (dedicated Redis instance)
 
-    # Read password from file if REDIS_CABLE_PASSWORD_FILE is set
-    password = if ENV['REDIS_CABLE_PASSWORD_FILE'] && File.exist?(ENV['REDIS_CABLE_PASSWORD_FILE'])
-      File.read(ENV['REDIS_CABLE_PASSWORD_FILE']).strip
-    elsif ENV['REDIS_CABLE_PASSWORD']
-      ENV['REDIS_CABLE_PASSWORD']
+    # Read password from file if password_file is set
+    password = if password_file.present? && File.exist?(password_file)
+      File.read(password_file).strip
     end
 
-    if password && !password.empty?
+    if password.present?
       "redis://:#{password}@#{host}:#{port}/#{db}"
     else
       "redis://#{host}:#{port}/#{db}"
     end
   %>
-  <% end %>
   # Channel prefix to avoid conflicts between environments
-  channel_prefix: <%= ENV.fetch('APP_NAME') { Rails.application.class.module_parent_name.underscore } %>_<%= Rails.env %>
+  channel_prefix: <%= Rails.application.class.module_parent_name.underscore %>_<%= Rails.env %>
 
 development:
   # Async adapter for development (no Redis required)

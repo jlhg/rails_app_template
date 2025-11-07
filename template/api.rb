@@ -33,11 +33,10 @@ copy_file from_files(".rubocop.yml"), ".rubocop.yml"
 remove_file ".dockerignore"
 copy_file from_files(".dockerignore_template"), ".dockerignore"
 
-# Add Docker compose template
+# Add Docker compose templates
 copy_file from_files("compose.yaml"), "compose.yaml"
-
-# Add Docker compose override example for development
-copy_file from_files("compose.override.yaml.example"), "compose.override.yaml.example"
+copy_file from_files("compose.dev.yaml"), "compose.dev.yaml"
+copy_file from_files("compose.test.yaml"), "compose.test.yaml"
 
 # Add Dockerfile template
 # Rails 8.1+ creates Dockerfile by default, so we need to remove it first
@@ -48,7 +47,7 @@ copy_file from_files("Dockerfile"), "Dockerfile"
 # Rails 8.1+ creates bin/docker-entrypoint by default, so we need to remove it first
 remove_file "bin/docker-entrypoint"
 copy_file from_files("docker-entrypoint.sh"), "bin/docker-entrypoint"
-chmod "bin/docker-entrypoint", 0755
+chmod "bin/docker-entrypoint", 0o755
 
 # Add .env.example for environment configuration
 copy_file from_files(".env.example"), ".env.example"

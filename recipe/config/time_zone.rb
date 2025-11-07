@@ -1,1 +1,1 @@
-environment "config.time_zone = ENV.fetch('TIME_ZONE', 'UTC')"
+environment "config.time_zone = AppConfig.instance.time_zone"

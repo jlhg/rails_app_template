@@ -40,7 +40,7 @@ config/gcloud.json
 .project
 .settings/
 
-# Docker Compose - Personal overrides (not committed)
+# Docker Compose
 compose.override.yaml
 compose.override.yml
 compose.local.yaml
@@ -48,20 +48,14 @@ compose.local.yml
 compose.*.local.yaml
 compose.*.local.yml
 
-# Cloudflare Tunnel - Personal configuration (contains tunnel ID and domain)
-cloudflared-config.yaml
+# Docker secrets
+.secrets/
 
 # Docker runtime data
 .srv/
 
-# Environment files (may contain sensitive data)
+# Environment files
 .env
-
-# Docker secrets (protect actual secrets, allow examples and documentation)
-.secrets/*
-!.secrets/.gitkeep
-!.secrets/README.md
-!.secrets/*.example
 
 # Test coverage and reports
 /coverage/
@@ -72,8 +66,9 @@ cloudflared-config.yaml
 # Cache directories
 .cache/
 
-# Claude Code (local settings and logs)
+# Claude Code
 .claude/settings.local.json
 .claude/logs/
 .claude/*.log
 .claude/cache/
+.serena/

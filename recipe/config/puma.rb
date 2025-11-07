@@ -6,20 +6,20 @@ create_file "config/puma.rb", <<~RUBY, force: true
   # the maximum value specified for Puma. Default is set to 5 threads for minimum
   # and maximum; this matches the default thread size of Active Record.
   #
-  max_threads_count = ENV.fetch("RAILS_MAX_THREADS", 16).to_i
-  min_threads_count = ENV.fetch("RAILS_MIN_THREADS", max_threads_count).to_i
+  max_threads_count = AppConfig.instance.rails_max_threads
+  min_threads_count = AppConfig.instance.rails_min_threads
   threads min_threads_count, max_threads_count
 
   # Specifies the `worker_timeout` as a number of seconds. If you have long-running jobs,
   # you may need to increase this value. Default is 30 seconds.
   #
-  worker_timeout ENV.fetch("PUMA_WORKER_TIMEOUT") { 30 }
+  worker_timeout AppConfig.instance.puma_worker_timeout
 
   # Specifies the `bind` address that Puma will listen on.
   # Default is 0.0.0.0 to allow access from any interface (required for Docker containers).
   # Use BIND env var to override (e.g., BIND="tcp://127.0.0.1:3000" for localhost only)
   #
-  bind ENV.fetch("BIND") { "tcp://0.0.0.0:\#{ENV.fetch('PORT', 3000)}" }
+  bind ENV.fetch("BIND", "tcp://0.0.0.0:\#{ENV.fetch('PORT', 3000)}")
 
   # Specifies the `environment` that Puma will run in.
   #
@@ -36,14 +36,14 @@ create_file "config/puma.rb", <<~RUBY, force: true
   #
   # In production, you typically want to set this to the number of available CPU cores.
   # Default: 0 (single mode, no workers)
-  workers ENV.fetch("WEB_CONCURRENCY") { 0 }
+  workers AppConfig.instance.web_concurrency
 
   # Use the `preload_app!` method when specifying a `workers` number.
   # This directive tells Puma to first boot the application and load code
   # before forking the application. This takes advantage of Copy On Write
   # process behavior so workers use less memory.
   #
-  if ENV.fetch("WEB_CONCURRENCY", 0).to_i > 0
+  if AppConfig.instance.web_concurrency > 0
     preload_app!
 
     # Disconnect from database and external services before forking
@@ -55,10 +55,18 @@ create_file "config/puma.rb", <<~RUBY, force: true
       # Disconnect Redis ConnectionPools
       # ConnectionPool will automatically create new connections in workers
       if defined?(REDIS_CACHE)
-        REDIS_CACHE.shutdown { |redis| redis.quit rescue nil }
+        REDIS_CACHE.shutdown do |redis|
+          redis.quit
+        rescue
+          nil
+        end
       end
       if defined?(REDIS_SESSION)
-        REDIS_SESSION.shutdown { |redis| redis.quit rescue nil }
+        REDIS_SESSION.shutdown do |redis|
+          redis.quit
+        rescue
+          nil
+        end
       end
     end
 

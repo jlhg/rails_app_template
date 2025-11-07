@@ -18,14 +18,14 @@ end
 # Configure ActionCable for production
 environment <<-CODE, env: "production"
   # ActionCable WebSocket URL
-  config.action_cable.url = ENV.fetch('ACTION_CABLE_URL', 'ws://localhost:3000/cable')
+  config.action_cable.url = AppConfig.instance.action_cable_url
 
   # Allow requests from specified origins
   # Set to array of domains in production for security
-  config.action_cable.allowed_request_origins = ENV.fetch('ACTION_CABLE_ALLOWED_ORIGINS', '*').split(',').map(&:strip)
+  config.action_cable.allowed_request_origins = AppConfig.instance.action_cable_allowed_origins
 
   # Disable request forgery protection for API mode
-  config.action_cable.disable_request_forgery_protection = ENV.fetch('ACTION_CABLE_DISABLE_FORGERY_PROTECTION', 'true') == 'true'
+  config.action_cable.disable_request_forgery_protection = AppConfig.instance.action_cable_disable_forgery_protection
 CODE
 
 # Configure ActionCable for development

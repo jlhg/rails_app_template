@@ -1,5 +1,0 @@
-# Persistent data directory
-.srv/
-
-# Secrets
-.secrets/

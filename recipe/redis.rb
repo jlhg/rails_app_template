@@ -32,30 +32,22 @@ initializer "redis.rb", <<~'CODE'
   # redis_session: Access tokens, sessions (no eviction, AOF persistence)
 
   # Helper method to build Valkey/Redis URL with Docker secrets support
-  def build_redis_url(host:, port:, db: 0, password_file: nil, password: nil)
-    if password_file && File.exist?(password_file)
-      pwd = File.read(password_file).strip
-    elsif password
-      pwd = password
-    end
-
-    if pwd.present?
-      "redis://:#{pwd}@#{host}:#{port}/#{db}"
+  def build_redis_url(host:, port:, db: 0, password_file: nil)
+    if password_file.present? && File.exist?(password_file)
+      "redis://:#{File.read(password_file).strip}@#{host}:#{port}/#{db}"
     else
       "redis://#{host}:#{port}/#{db}"
     end
   end
 
   # Pool size should match RAILS_MAX_THREADS for optimal performance
-  pool_size = ENV.fetch("RAILS_MAX_THREADS", 16).to_i
+  pool_size = AppConfig.instance.rails_max_threads
 
   # Valkey Cache (Rails.cache, Rack::Attack, temporary data)
   cache_url = build_redis_url(
-    host:          ENV.fetch("REDIS_CACHE_HOST", "localhost"),
-    port:          ENV.fetch("REDIS_CACHE_PORT", 6379),
-    db:            0,
-    password_file: ENV.fetch("REDIS_CACHE_PASSWORD_FILE", nil),
-    password:      ENV.fetch("REDIS_CACHE_PASSWORD", nil)
+    host:          AppConfig.instance.redis_cache_host,
+    port:          AppConfig.instance.redis_cache_port,
+    password_file: AppConfig.instance.redis_cache_password_file
   )
 
   REDIS_CACHE = ConnectionPool.new(size: pool_size, timeout: 5) do
@@ -64,11 +56,9 @@ initializer "redis.rb", <<~'CODE'
 
   # Valkey Session (Access tokens, user sessions, important state)
   session_url = build_redis_url(
-    host:          ENV.fetch("REDIS_SESSION_HOST", "localhost"),
-    port:          ENV.fetch("REDIS_SESSION_PORT", 6379),
-    db:            0,
-    password_file: ENV.fetch("REDIS_SESSION_PASSWORD_FILE", nil),
-    password:      ENV.fetch("REDIS_SESSION_PASSWORD", nil)
+    host:          AppConfig.instance.redis_session_host,
+    port:          AppConfig.instance.redis_session_port,
+    password_file: AppConfig.instance.redis_session_password_file
   )
 
   REDIS_SESSION = ConnectionPool.new(size: pool_size, timeout: 5) do

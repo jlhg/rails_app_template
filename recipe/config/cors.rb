@@ -22,34 +22,29 @@ initializer "cors.rb", <<~CODE
   # Reference: https://github.com/cyu/rack-cors#rails-configuration
   Rails.application.config.middleware.insert_before 0, Rack::Cors do
     allow do
-      # Get allowed origins from environment variable
-      # Default: "*" (allow all origins)
-      # Production: Set explicit origins for security
-      # Example: CORS_ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
-      cors_origins = ENV.fetch("CORS_ALLOWED_ORIGINS", "*")
+      origins_list = AppConfig.instance.cors_allowed_origins
 
       # Parse origins and determine credentials setting
-      if cors_origins == "*"
+      if origins_list == ["*"]
         origins "*"
         use_credentials = false
       else
-        origins_list = cors_origins.split(",").map(&:strip).reject(&:empty?)
         origins(*origins_list) unless origins_list.empty?
         use_credentials = true
       end
+
+      # ActionCable WebSocket endpoint
+      resource "/api/cable",
+               headers:     :any,
+               methods:     [:get, :post, :options],
+               credentials: use_credentials
 
       # Allow all API resources
       resource "/api/*",
                headers:     :any,
                methods:     [:get, :post, :put, :patch, :delete, :options, :head],
-               credentials: use_credentials, # Only enable with specific origins
+               credentials: use_credentials,
                max_age:     86400 # Cache preflight requests for 24 hours
-
-      # ActionCable WebSocket endpoint
-      resource "/cable",
-               headers:     :any,
-               methods:     [:get, :post, :options],
-               credentials: use_credentials
     end
   end
 CODE

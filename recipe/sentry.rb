@@ -35,14 +35,14 @@ initializer "sentry.rb", <<~RUBY
   Sentry.init do |config|
     # DSN (Data Source Name) - get this from your Sentry project settings
     # If not set, Sentry will be disabled (safe for development)
-    config.dsn = ENV.fetch("SENTRY_DSN", nil)
+    config.dsn = AppConfig.instance.sentry_dsn
 
     # Enable only in production environment
     # Development and test environments use Rails default error handling
     config.enabled_environments = ["production"]
 
     # Set environment name (defaults to Rails.env if not specified)
-    config.environment = ENV.fetch("SENTRY_ENVIRONMENT", Rails.env)
+    config.environment = AppConfig.instance.sentry_environment
 
     # Breadcrumbs: Record user actions leading to errors
     # Helps understand the context when an error occurs
@@ -79,7 +79,7 @@ initializer "sentry.rb", <<~RUBY
       return 0.0 if transaction_name&.include?("/up")
 
       # Sample all other requests at configured rate
-      ENV.fetch("SENTRY_TRACES_SAMPLE_RATE", 0.1).to_f
+      AppConfig.instance.sentry_traces_sample_rate
     end
 
     # Before sending transactions, filter out health checks

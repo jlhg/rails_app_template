@@ -24,7 +24,6 @@ directory from_files("docs/openapi"), "docs/openapi"
 
 # Rename template files to actual filenames
 inside "docs/openapi" do
-  run "mv .gitignore_template .gitignore", verbose: false
   run "mv .dockerignore_template .dockerignore", verbose: false
 end
 

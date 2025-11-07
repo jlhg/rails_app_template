@@ -1,57 +1,55 @@
-# See https://docs.docker.com/engine/reference/builder/#dockerignore-file for more about ignoring files.
-
-# Ignore git directory
+# Git directory
 /.git/
 /.gitignore
 /.gitattributes
 
-# Ignore bundler config
+# Bundler config
 /.bundle
 
-# Ignore all environment files (secrets should use Docker secrets)
+# All environment files
 /.env*
 !/.env.example
 
-# Ignore all default key files
+# All default key files
 /config/master.key
 /config/credentials/*.key
 
-# Ignore all logfiles and tempfiles
+# All logfiles and tempfiles
 /log/*
 !/log/.keep
 /tmp/*
 !/tmp/.keep
 
-# Ignore pidfiles, but keep the directory
+# pidfiles, but keep the directory
 /tmp/pids/*
 !/tmp/pids/.keep
 
-# Ignore storage (uploaded files in development and any SQLite databases)
+# Storage (uploaded files in development and any SQLite databases)
 /storage/*
 !/storage/.keep
 /tmp/storage/*
 !/tmp/storage/.keep
 
-# Ignore test files and coverage reports
+# Test files and coverage reports
 /test/
 /spec/
 /coverage/
 
-# Ignore documentation (OpenAPI docs run as separate service)
+# Documentation
 /docs/
 
-# Ignore CI service files
+# CI service files
 /.github
 
-# Ignore Kamal deployment files
+# Kamal deployment files
 /config/deploy*.yml
 /.kamal
 
-# Ignore development files
+# Development files
 /.devcontainer
 .pry_history
 
-# Ignore Docker-related files
+# Docker files
 /.dockerignore
 /Dockerfile*
 /compose.yaml
@@ -59,27 +57,30 @@
 /compose.*.yaml
 /compose.*.yml
 
-# Ignore Docker development files
-/.srv/
+# Docker secrets
 /.secrets/
+
+# Docker runtime data
+/.srv/
 
 # Ignore editor temp files
 \#*\#
 *~
 
-# Ignore editor directories and files
+# Editor directories and files
 /.vscode
 /.idea
 .DS_Store
 
-# Ignore Claude Code (development guide, not needed in production)
+# Claude Code
 /.claude/
 /CLAUDE.md
+/.serena/
 
-# Ignore development tools configuration
+# Development tools configuration
 /.rubocop.yml
 /.rubocop_todo.yml
 /.rspec
 
-# Ignore bundler vendor (rebuilt in image with --deployment)
+# Bundler vendor (rebuilt in image with --deployment)
 /vendor/bundle/
