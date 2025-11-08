@@ -28,7 +28,11 @@ end
 support_files.each do |f|
   lib_name = File.basename(f, ".rb")
   file "spec/support/#{lib_name}.rb", File.read(f)
-  lines.insert(start, "require \"support/#{lib_name}\"\n")
+  if lib_name == "deprecation_tracking"
+    lines.insert(start, "# require \"support/#{lib_name}\"\n")
+  else
+    lines.insert(start, "require \"support/#{lib_name}\"\n")
+  end
   start += 1
 end
 

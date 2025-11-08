@@ -1,6 +1,7 @@
 name: "rails-app-dev"
 
 x-common: &common
+  restart: unless-stopped
   env_file:
     - .env.example
     - .env
