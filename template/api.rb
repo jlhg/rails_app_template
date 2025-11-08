@@ -86,6 +86,7 @@ recipe "pundit"
 recipe "rack_attack"
 recipe "redis"
 recipe "rspec"
+recipe "pg_query"
 recipe "rubocop"
 recipe "sentry"
 
