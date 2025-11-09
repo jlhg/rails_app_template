@@ -38,8 +38,8 @@ x-rails-common: &rails-common
       RAILS_ENV: development
       BUNDLE_DEPLOYMENT: false
       BUNDLE_WITHOUT: ""
-      USER_ID: ${UID:-1000}
-      GROUP_ID: ${GID:-1000}
+      APP_UID: ${APP_UID:-1000}
+      APP_GID: ${APP_GID:-1000}
   depends_on:
     pg:
       condition: service_healthy

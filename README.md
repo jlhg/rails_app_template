@@ -76,6 +76,10 @@ echo "your-cloudflare-tunnel-token" > .secrets/cf_tunnel_token
 cp .env.example .env
 # Edit .env with your configuration
 
+# Build with host user permissions (for volume mounting)
+# Set APP_UID/APP_GID to match host user for proper file permissions
+APP_UID=$(id -u) APP_GID=$(id -g) docker compose -f compose.dev.yaml build
+
 # Start services
 docker compose -f compose.dev.yaml up -d
 ```

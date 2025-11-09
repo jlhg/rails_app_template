@@ -8,7 +8,12 @@ FROM docker.io/library/ruby:3.4.7-slim AS base
 WORKDIR /rails
 
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips gnupg lsb-release && \
+    # Add PostgreSQL official repository for version 18
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    apt-get update -qq && \
+    apt-get install --no-install-recommends -y postgresql-client-18 && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
@@ -87,11 +92,11 @@ RUN bundle exec bootsnap precompile -j 1 app/ lib/
 FROM base
 
 # Run and own only the runtime files as a non-root user for security
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-RUN groupadd --system --gid ${GROUP_ID} rails && \
-    useradd rails --uid ${USER_ID} --gid ${GROUP_ID} --create-home --shell /bin/bash
-USER ${USER_ID}:${GROUP_ID}
+ARG APP_UID=1000
+ARG APP_GID=1000
+RUN groupadd --system --gid ${APP_GID} rails && \
+    useradd rails --uid ${APP_UID} --gid ${APP_GID} --create-home --shell /bin/bash
+USER ${APP_UID}:${APP_GID}
 
 # Copy built artifacts: gems, application
 COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"

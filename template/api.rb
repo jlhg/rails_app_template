@@ -111,6 +111,23 @@ environment <<~RUBY
 RUBY
 
 recipe "database_yml"
+
+# Use SQL schema format to preserve PostgreSQL-specific features
+# (sequences, views, functions, etc.)
+environment "config.active_record.schema_format = :sql"
+
+# Create directories for multiple database migrations
+%w[queue cache cable].each do |db|
+  empty_directory "db/#{db}_migrate"
+end
+
+# Create empty structure.sql files for multiple databases
+after_bundle do
+  %w[structure cable_structure cache_structure queue_structure].each do |file|
+    create_file "db/#{file}.sql", "-- PostgreSQL database schema\n"
+  end
+end
+
 recipe "uuidv7"
 recipe "action_storage"
 
