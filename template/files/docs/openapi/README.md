@@ -5,9 +5,9 @@ along with a standalone documentation service using Docker.
 
 ## Directory Structure
 
-```
+```text
 /
-├── Dockerfile              # nginx:1.29-alpine with embedded configuration
+├── Dockerfile              # nginx:1.30-alpine with embedded configuration
 ├── compose.yaml            # Docker Compose configuration
 ├── .dockerignore           # Files excluded from Docker image
 ├── .gitignore              # Files excluded from git

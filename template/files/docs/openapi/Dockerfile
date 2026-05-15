@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM nginx:1.29.3-alpine
+FROM nginx:1.30.1-alpine
 WORKDIR /app
 COPY ./src/ .
 COPY <<EOF /etc/nginx/nginx.conf
