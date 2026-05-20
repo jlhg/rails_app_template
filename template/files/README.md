@@ -1,6 +1,6 @@
 # Rails Application
 
-Rails 8.1 API application using Valkey (Redis-compatible) for caching, background jobs (Sidekiq), and WebSocket (ActionCable).
+Rails 8.1 API application using Valkey (Redis-compatible) for caching, session storage, WebSocket (ActionCable), and background jobs (Sidekiq).
 
 ## Architecture
 
@@ -63,7 +63,7 @@ The `-v $(pwd)/db:/rails/db` flag syncs `structure.sql` changes back to host.
 
 ### Test Environment
 
-The test environment uses PostgreSQL and Valkey for testing with real Redis instances.
+The test environment uses PostgreSQL and Valkey (Redis-compatible) to test against real backing services rather than in-memory stubs.
 
 ```sh
 docker compose -f compose.test.yaml run --rm --build server bin/rspec
@@ -124,4 +124,4 @@ For more deployment options, run `bin/deploy --help`.
 ## Resources
 
 - [OpenAPI Documentation](docs/openapi)
-- [Rake Tasks Documentation](docs/rake-tasks.md)
+- [Logging](docs/logging.md)

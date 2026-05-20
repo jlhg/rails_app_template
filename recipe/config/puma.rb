@@ -3,8 +3,8 @@ create_file "config/puma.rb", <<~RUBY, force: true
   # Puma can serve each request in a thread from an internal thread pool.
   # The `threads` method setting takes two numbers: a minimum and maximum.
   # Any libraries that use thread pools should be configured to match
-  # the maximum value specified for Puma. Default is set to 5 threads for minimum
-  # and maximum; this matches the default thread size of Active Record.
+  # the maximum value specified for Puma. The values below are read from
+  # AppConfig to match Active Record's pool size.
   #
   max_threads_count = AppConfig.instance.rails_max_threads
   min_threads_count = AppConfig.instance.rails_min_threads
@@ -17,7 +17,7 @@ create_file "config/puma.rb", <<~RUBY, force: true
 
   # Specifies the `bind` address that Puma will listen on.
   # Default is 0.0.0.0 to allow access from any interface (required for Docker containers).
-  # Use BIND env var to override (e.g., BIND="tcp://127.0.0.1:3000" for localhost only)
+  # Use BIND env var to override (e.g., BIND="tcp://127.0.0.1:3000" for localhost only).
   #
   bind ENV.fetch("BIND", "tcp://0.0.0.0:\#{ENV.fetch('PORT', 3000)}")
 
@@ -29,7 +29,7 @@ create_file "config/puma.rb", <<~RUBY, force: true
   pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 
   # Specifies the number of `workers` to boot in clustered mode.
-  # Workers are forked web server processes. If using threads and workers together
+  # Workers are forked web server processes. If using threads and workers together,
   # the concurrency of the application would be max `threads` * `workers`.
   # Workers do not work on JRuby or Windows (both of which do not support
   # processes).
@@ -46,8 +46,8 @@ create_file "config/puma.rb", <<~RUBY, force: true
   if AppConfig.instance.web_concurrency > 0
     preload_app!
 
-    # Disconnect from database and external services before forking
-    # This prevents socket connections from being copied to child processes
+    # Disconnect from database and external services before forking.
+    # This prevents socket connections from being copied to child processes.
     before_fork do
       # Disconnect ActiveRecord
       ActiveRecord::Base.connection_pool.disconnect! if defined?(ActiveRecord)
@@ -70,9 +70,13 @@ create_file "config/puma.rb", <<~RUBY, force: true
       end
     end
 
-    # Reconnect to database and external services after forking
-    # Each worker process needs its own connections
+    # Reconnect to database and external services after forking.
+    # Each worker process needs its own connections.
     on_worker_boot do
+      # Forked workers inherit a dead semantic_logger appender thread; reopen
+      # first so any boot-time logging in the worker reaches a live consumer.
+      SemanticLogger.reopen if defined?(SemanticLogger)
+
       # Reconnect ActiveRecord
       ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
 

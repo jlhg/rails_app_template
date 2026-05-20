@@ -3,7 +3,7 @@
 # Configures Rails to use UUIDv7 for all new tables by default.
 #
 # Benefits:
-# - Same performance as bigint (290s = 290s for 1M row inserts)
+# - Same performance as bigint (1M row inserts take ~290s either way)
 # - Prevents business intelligence leakage (order count, growth rate)
 # - Time-ordered for excellent B-tree index locality
 # - RFC 9562 standardized (PostgreSQL 18+, MySQL 8.4+)
@@ -16,17 +16,17 @@
 #     # Uses bigint instead of UUID
 #   end
 
-# Configure Rails generators to use UUID by default
+# Configure Rails generators to use UUID by default.
 initializer "generators.rb", <<~RUBY
-  # Default primary key type for all new tables
+  # Default primary key type for all new tables.
   # Use UUIDv7 for better security (prevents business intel leakage)
-  # while maintaining bigint-level performance
+  # while maintaining bigint-level performance.
   Rails.application.config.generators do |g|
     g.orm :active_record, primary_key_type: :uuid
   end
 RUBY
 
-# Configure PostgreSQL to use uuidv7() for UUID generation
+# Configure PostgreSQL to use uuidv7() for UUID generation.
 initializer "uuidv7.rb", <<~RUBY
   # PostgreSQL 18+ UUIDv7 Configuration
   #
@@ -35,7 +35,7 @@ initializer "uuidv7.rb", <<~RUBY
   #
   # Performance comparison (1M row insert):
   # - bigint:  290 seconds
-  # - UUIDv7:  290 seconds (same as bigint!)
+  # - UUIDv7:  290 seconds
   # - UUIDv4:  375 seconds
   #
   # Storage:
@@ -48,15 +48,21 @@ initializer "uuidv7.rb", <<~RUBY
   # - Maintains global uniqueness (safe for distributed systems)
 
   ActiveSupport.on_load(:active_record) do
-    # Override default UUID generation to use uuidv7()
-    # This modifies the PostgreSQL adapter's native database types
+    # Override default UUID generation to use uuidv7().
+    # This modifies the PostgreSQL adapter's native database types.
     ActiveRecord::ConnectionAdapters::PostgreSQLAdapter::NATIVE_DATABASE_TYPES[:uuid][:default] = -> { "uuidv7()" }
   end
 RUBY
 
-# Add migration template for UUID tables with references
+# Add migration template for UUID tables with references.
 # Template file: template/files/lib/templates/active_record/migration/create_table_migration.rb
 directory from_files("lib"), "lib"
+
+# lib/templates/ holds ERB scaffold templates; Zeitwerk would fail to parse
+# them as Ruby under production eager_load.
+gsub_file "config/application.rb",
+          "config.autoload_lib(ignore: %w[assets tasks])",
+          "config.autoload_lib(ignore: %w[assets tasks templates])"
 
 # NOTE: Migration generator will automatically use UUID for new tables.
 # The default value (uuidv7()) is set globally in config/initializers/uuidv7.rb

@@ -213,6 +213,12 @@ RSpec/MessageSpies:
 RSpec/IndexedLet:
   Enabled: false
 
+# spec/rails_helper.rb uses abort() in the RSpec-Rails boilerplate
+# (production-env guard, pending-migration handler).
+Rails/Exit:
+  Exclude:
+    - 'spec/rails_helper.rb'
+
 # Allow let! for test data setup even if not directly referenced
 RSpec/LetSetup:
   Enabled: false

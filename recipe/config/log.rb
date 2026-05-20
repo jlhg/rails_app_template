@@ -1,55 +1,51 @@
 # Logging Configuration
 #
-# This template uses Lograge for structured JSON logging in production
-# https://github.com/roidrage/lograge
+# rails_semantic_logger emits one JSON object per STDOUT line in production
+# so log aggregators (ELK, Datadog, CloudWatch) parse exception traces,
+# Sidekiq output, and direct Rails.logger.* calls uniformly.
 #
-# Production: Single-line JSON logs (easy for ELK, Datadog, CloudWatch)
-# Development: Human-readable colorized logs
-# Test: Minimal logs (warn level)
+# https://github.com/reidmorrison/rails_semantic_logger
 #
-# Note: Health check endpoint is automatically silenced via config.silence_healthcheck_path
-# in config/application.rb
+# Per-request request_id and ip are attached as named tags by the
+# SemanticLoggerNamedTags Rack middleware. See docs/logging.md for the
+# production JSON schema and an example user_id around-action.
 
-gem "lograge"
+gem "rails_semantic_logger"
 
-# Production environment: Structured JSON logs with Lograge
+# Strip Rails 8.1 TaggedLogging defaults that would compete with the gem.
+gsub_file "config/environments/production.rb",
+          /^\s*# Log to STDOUT with the current request id as a default log tag\.\s*\n/, ""
+gsub_file "config/environments/production.rb",
+          /^\s*config\.log_tags\s*=.*\n/, ""
+gsub_file "config/environments/production.rb",
+          /^\s*config\.logger\s*=\s*ActiveSupport::TaggedLogging\.logger\(STDOUT\).*\n/, ""
+
 environment <<~RUBY, env: "production"
-  # Enable Lograge for structured single-line logs
-  config.lograge.enabled = true
-
-  # Use JSON formatter (easy parsing for log aggregation tools)
-  config.lograge.formatter = Lograge::Formatters::Json.new
-
-  # API-only app configuration
-  config.lograge.base_controller_class = 'ActionController::API'
-
-  # Add custom fields to each log entry
-  config.lograge.custom_options = lambda do |event|
-    {
-      request_id: event.payload[:request_id],
-      user_id: event.payload[:user_id],
-      ip: event.payload[:ip]
-    }
-  end
-
-  # Output logs to STDOUT for Docker container best practices
-  config.logger = ActiveSupport::Logger.new($stdout)
+  config.rails_semantic_logger.semantic          = true
+  config.rails_semantic_logger.add_file_appender = false
+  config.rails_semantic_logger.format            = :json
+  config.semantic_logger.add_appender(io: $stdout, formatter: :json)
 RUBY
 
-# Development environment: Human-readable logs
 environment <<~RUBY, env: "development"
-  # Colorized logs for better readability
-  config.colorize_logging = true
-
-  # Show detailed logs in development
+  config.rails_semantic_logger.format = :color
   config.log_level = :debug
-
-  # Output logs to STDOUT for Docker container best practices
-  config.logger = ActiveSupport::Logger.new($stdout)
 RUBY
 
-# Test environment: Minimal logs
 environment <<~RUBY, env: "test"
-  # Reduce noise in test output
   config.log_level = :warn
+  config.rails_semantic_logger.format = :default
+
+  # Synchronous so spec log assertions run on the example thread.
+  SemanticLogger.sync!
 RUBY
+
+after_bundle do
+  # Lives under app/middleware/ so Zeitwerk's path-derived constant matches
+  # the top-level SemanticLoggerNamedTags under production eager_load.
+  copy_file from_files("app/middleware/semantic_logger_named_tags.rb"),
+            "app/middleware/semantic_logger_named_tags.rb"
+
+  copy_file from_files("config/initializers/semantic_logger.rb"),
+            "config/initializers/semantic_logger.rb"
+end
