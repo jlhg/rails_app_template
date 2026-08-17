@@ -1,0 +1,9 @@
+---
+# Files under template/files/ are Rails templates. Several embed ERB tags
+# (cable.yml, database.yml), which are not parseable as standalone YAML.
+# The same directory is excluded in .rubocop.yml for the same reason.
+
+extends: default
+
+ignore: |
+  template/files/

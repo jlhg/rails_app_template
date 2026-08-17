@@ -1,3 +1,4 @@
+---
 # This is a Rails template generator project (pure Ruby scripts)
 # No RuboCop plugins are needed for this project
 # Note: template/files/ contains Rails app templates with their own .rubocop.yml
@@ -32,7 +33,7 @@ Lint/ConstantDefinitionInBlock:
 Lint/DuplicateBranch:
   Enabled: false
 Lint/EmptyBlock:
-  Enabled : false
+  Enabled: false
 Lint/RaiseException:
   Enabled: true
 Lint/StructNewOverride:
@@ -133,7 +134,8 @@ Style/ZeroLengthPredicate:
 # Project-specific configurations
 
 # Disable filename convention for gem files
-# These files are named after their corresponding gems (e.g., rack-attack, rails-i18n)
+# These files are named after their corresponding gems
+# (e.g., rack-attack, rails-i18n)
 Naming/FileName:
   Exclude:
     - 'gem/**/*'
