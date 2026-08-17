@@ -59,4 +59,6 @@ after_bundle do
 
   copy_file from_files("config/initializers/semantic_logger.rb"),
             "config/initializers/semantic_logger.rb"
+
+  copy_file from_files("docs/logging.md"), "docs/logging.md"
 end
