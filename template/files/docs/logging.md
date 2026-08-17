@@ -4,11 +4,11 @@ This application uses [`rails_semantic_logger`](https://github.com/reidmorrison/
 
 ## Environment Matrix
 
-| Environment | Formatter  | Sink           | Notes                                                                                                 |
-|-------------|------------|----------------|-------------------------------------------------------------------------------------------------------|
-| production  | `:json`    | STDOUT (only)  | Default file appender disabled. `request_id` and `ip` injected as named tags by Rack middleware.      |
-| development | `:color`   | STDOUT         | Color multi-line output for human reading.                                                            |
-| test        | `:default` | STDOUT         | Calls `SemanticLogger.sync!` so log writes happen synchronously and spec assertions observe them on the example thread. |
+| Environment | Formatter | Sink | Notes |
+|---|---|---|---|
+| production | `:json` | STDOUT (only) | Default file appender disabled. `request_id` and `ip` injected as named tags by Rack middleware. |
+| development | `:color` | `log/development.log` + STDOUT (under `rails server`) | Color multi-line output for human reading. |
+| test | `:default` | `log/test.log` | Calls `SemanticLogger.sync!` so log writes happen synchronously and spec assertions observe them on the example thread. |
 
 ## Production JSON Schema
 

@@ -21,20 +21,31 @@ gsub_file "config/environments/production.rb",
           /^\s*config\.logger\s*=\s*ActiveSupport::TaggedLogging\.logger\(STDOUT\).*\n/, ""
 
 environment <<~RUBY, env: "production"
-  config.rails_semantic_logger.semantic          = true
-  config.rails_semantic_logger.add_file_appender = false
-  config.rails_semantic_logger.format            = :json
-  config.semantic_logger.add_appender(io: $stdout, formatter: :json)
+  config.rails_semantic_logger.semantic = true
+
+  # Declaring appenders replaces the gem's default file appender, so this
+  # block is the complete destination list: STDOUT only, no log file.
+  config.rails_semantic_logger.appenders do |appenders|
+    appenders.add(io: $stdout, formatter: :json)
+  end
 RUBY
 
 environment <<~RUBY, env: "development"
-  config.rails_semantic_logger.format = :color
+  # Declaring any appender opts out of the gem's automatic STDOUT appender,
+  # so `rails server` needs an explicit add_server declaration to keep
+  # printing to the terminal.
+  config.rails_semantic_logger.appenders do |appenders|
+    appenders.add(file_name: Rails.root.join("log/development.log").to_s, formatter: :color)
+    appenders.add_server(io: $stdout, formatter: :color)
+  end
   config.log_level = :debug
 RUBY
 
 environment <<~RUBY, env: "test"
   config.log_level = :warn
-  config.rails_semantic_logger.format = :default
+  config.rails_semantic_logger.appenders do |appenders|
+    appenders.add(file_name: Rails.root.join("log/test.log").to_s, formatter: :default)
+  end
 
   # Synchronous so spec log assertions run on the example thread.
   SemanticLogger.sync!
