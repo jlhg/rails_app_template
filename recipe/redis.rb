@@ -19,10 +19,6 @@ gem "redis"
 # https://github.com/mperham/connection_pool
 gem "connection_pool"
 
-# Map Redis types directly to Ruby objects
-# https://github.com/nateware/redis-objects
-gem "redis-objects"
-
 initializer "redis.rb", <<~'CODE'
   # Multiple Valkey/Redis instances for different purposes
   # This template uses Valkey by default (fully compatible with Redis)
