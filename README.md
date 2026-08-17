@@ -8,7 +8,7 @@ Rails 8.1 + Ruby 3.4 API templates with production-ready configuration.
 - UUIDv7 primary keys
 - Server/Worker architecture (Sidekiq)
 - Docker configuration with secrets management
-- Structured logging (Lograge)
+- Structured logging (Rails Semantic Logger)
 - Complete test setup (RSpec, FactoryBot, Prosopite)
 - Security (Rack::Attack, Pundit, JWT, Sentry)
 - YJIT enabled
@@ -35,6 +35,7 @@ rails new <project_name> --api -d postgresql --skip-test --skip-solid -m rails-a
 All application configuration uses the `APP_` prefix for environment variables. See `.env.example` for the complete list of available settings.
 
 Key configuration areas:
+
 - Database (PostgreSQL)
 - Redis (Cache, Cable, Session)
 - Rails settings (timezone, allowed hosts, CORS)
@@ -128,6 +129,7 @@ bin/deploy down            # Remove stack
 ```
 
 **Environment Variables:**
+
 - `APP_STACK_NAME` - Stack name (default: rails-app)
 - `APP_IMAGE_NAME` - Image name (default: local/rails-app:REVISION)
 
@@ -141,25 +143,31 @@ docker compose -f compose.test.yaml run --rm rails bundle exec rspec
 ## Included Gems
 
 ### Core
+
 - **bcrypt** - Password encryption
 - **anyway_config** - Configuration management with ENV support
 - **pagy** - Fast pagination
 - **aasm** - State machine
-- **lograge** - Structured JSON logging
+- **rails_semantic_logger** - Structured JSON logging
+- **pg** - PostgreSQL adapter
+- **sidekiq** - Background job processing
 
 ### API Development
+
 - **alba** - Fast JSON serialization
 - **rack-attack** - API rate limiting (requires configuration)
 - **rack-cors** - CORS support
 - **jwt** - JWT authentication
 - **pundit** - Authorization
+- **active_storage_validations** - Active Storage attachment validations
 
 ### Redis
+
 - **redis** - Redis client
 - **connection_pool** - Thread-safe connection pooling
-- **redis-objects** - Ruby objects backed by Redis
 
 ### Testing
+
 - **rspec-rails** - RSpec framework
 - **factory_bot_rails** - Test data factories
 - **faker** - Generate fake data
@@ -167,11 +175,14 @@ docker compose -f compose.test.yaml run --rm rails bundle exec rspec
 - **prosopite** - N+1 query detection
 
 ### Development
+
 - **debug** - Ruby's official debugger
 - **rubocop** - Ruby code analyzer
 - **erb_lint** - ERB template linter
 - **brakeman** - Rails security vulnerability scanner (Rails built-in)
 - **benchmark-ips** - Performance benchmarking
+- **pg_query** - PostgreSQL query parser
 
 ### Monitoring
+
 - **sentry-ruby** / **sentry-rails** - Error tracking (production only)
