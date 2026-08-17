@@ -24,7 +24,7 @@ A **recipe** is a modular, self-contained unit that configures a specific featur
 
 ### Directory Structure
 
-```
+```text
 rails_app_template/
 ├── lib/
 │   └── base.rb              # Lifecycle hooks and helper methods
@@ -43,28 +43,31 @@ rails_app_template/
 ### 1. Separation of Concerns
 
 **Template** (`template/api.rb`):
+
 - Coordinates recipe execution order
 - Provides orchestration, not implementation
 - Should NOT contain feature-specific logic
 
 **Recipe** (`recipe/*.rb`):
+
 - Contains all configuration for a specific feature
 - Includes gem declarations, initializers, generators, and files
 - Encapsulates feature logic completely
 
 ❌ **Bad Example** (violates separation):
+
 ```ruby
 # template/api.rb
 after_bundle do
   # Directly creating pagy configuration (should be in recipe!)
   initializer "pagy.rb", <<~CODE
-    require "pagy/extras/overflow"
-    Pagy::DEFAULT[:items] = 20
+    Pagy::OPTIONS[:limit] = 20
   CODE
 end
 ```
 
 ✅ **Good Example** (proper separation):
+
 ```ruby
 # template/api.rb
 recipe "pagy"  # Just orchestrate
@@ -73,8 +76,7 @@ recipe "pagy"  # Just orchestrate
 gem "pagy"
 after_generators do
   initializer "pagy.rb", <<~CODE
-    require "pagy/extras/overflow"
-    Pagy::DEFAULT[:items] = 20
+    Pagy::OPTIONS[:limit] = 20
   CODE
 end
 ```
@@ -93,7 +95,7 @@ Understanding the Rails template execution lifecycle is crucial for writing corr
 
 ### Lifecycle Stages
 
-```
+```text
 1. Template Execution
    ├── Recipe files are loaded
    ├── Gems are declared with `gem`
@@ -121,7 +123,7 @@ Understanding the Rails template execution lifecycle is crucial for writing corr
 |------|-------------|------------------|
 | Immediate execution | Configuration that doesn't require gems | Setting generator defaults, creating static files |
 | `after_bundle` | Running generators, creating config files | RSpec setup, Pundit install |
-| `after_generators` | Creating initializers that require gems | Pagy config with `require "pagy/extras/overflow"` |
+| `after_generators` | Creating initializers that reference gem constants | Pagy config with `Pagy::OPTIONS` |
 
 ## Design Patterns
 
@@ -130,6 +132,7 @@ Understanding the Rails template execution lifecycle is crucial for writing corr
 **When to use**: Initializer only configures Rails settings without requiring gems.
 
 **Example**:
+
 ```ruby
 # recipe/uuidv7.rb
 initializer "generators.rb", <<~RUBY
@@ -140,6 +143,7 @@ RUBY
 ```
 
 **Characteristics**:
+
 - No `require` statements for gems
 - Only uses Rails API
 - Can execute immediately
@@ -149,6 +153,7 @@ RUBY
 **When to use**: Initializer needs to access Rails configuration or application objects that are only available after Rails initialization.
 
 **Example**:
+
 ```ruby
 # recipe/sidekiq.rb
 gem "sidekiq", ">= 7.0"
@@ -164,6 +169,7 @@ RUBY
 ```
 
 **Characteristics**:
+
 - Uses `Rails.application.config.after_initialize` wrapper
 - Can access `AppConfig` and other Rails components
 - Safe to use with gem configuration
@@ -173,6 +179,7 @@ RUBY
 **When to use**: Recipe needs to run Rails generators.
 
 **Example**:
+
 ```ruby
 # recipe/rspec.rb
 gem "rspec-rails"
@@ -186,31 +193,33 @@ end
 ```
 
 **Characteristics**:
+
 - Uses `after_bundle` hook
 - Executes generators with `generate` method
 - Can perform file operations after generator completes
 
 ### Pattern 4: Delayed Initializer Creation
 
-**When to use**: Initializer requires gems to be loaded (uses `require "gem/file"`).
+**When to use**: Initializer references constants the gem defines, or requires gem files.
 
 **Example**:
+
 ```ruby
 # recipe/pagy.rb
-gem "pagy"
+gem "pagy", "~> 43.6"
 
 after_generators do
   initializer "pagy.rb", <<~CODE
-    require "pagy/extras/overflow"
-    Pagy::DEFAULT[:items] = 20
-    Pagy::DEFAULT[:overflow] = :empty_page
-    PAGY_ITEM_MIN = 5
-    PAGY_ITEM_MAX = 100
+    Pagy::OPTIONS[:limit] = 20
+    Pagy::OPTIONS[:max_limit] = 100
+
+    Pagy::OPTIONS.freeze
   CODE
 end
 ```
 
 **Characteristics**:
+
 - Uses `after_generators` hook (custom lifecycle)
 - Ensures generators complete before creating initializer
 - Prevents LoadError when generators load Rails environment
@@ -220,6 +229,7 @@ end
 **When to use**: Recipe needs both immediate configuration and delayed operations.
 
 **Example**:
+
 ```ruby
 # recipe/sidekiq.rb
 gem "sidekiq", ">= 7.0"
@@ -243,6 +253,7 @@ RUBY
 ```
 
 **Characteristics**:
+
 - Combines multiple patterns
 - Uses both `after_bundle` and `initializer`
 - Separates concerns within the recipe
@@ -340,16 +351,16 @@ end
 
 ```ruby
 # ❌ Wrong
-gem "pagy"
-initializer "pagy.rb", <<~CODE
-  require "pagy/extras/overflow"  # LoadError during generators!
+gem "some_gem"
+initializer "some_gem.rb", <<~CODE
+  require "some_gem/extension"  # LoadError during generators!
 CODE
 
 # ✅ Correct
-gem "pagy"
+gem "some_gem"
 after_generators do
-  initializer "pagy.rb", <<~CODE
-    require "pagy/extras/overflow"  # Safe: generators complete, gems loaded
+  initializer "some_gem.rb", <<~CODE
+    require "some_gem/extension"  # Safe: generators complete, gems loaded
   CODE
 end
 ```
@@ -400,7 +411,7 @@ end
 
 When creating a recipe, follow this decision tree:
 
-```
+```text
 Does the recipe need to install a gem?
 ├─ No
 │  └─ Just use immediate execution or create_file
@@ -448,23 +459,28 @@ Available from Rails template DSL (no need to define):
 ## Examples from Existing Recipes
 
 ### Pattern 1: Static Configuration
+
 - `recipe/uuidv7.rb` - Generator settings
 - `recipe/i18n.rb` - I18n configuration
 
 ### Pattern 2: Configuration with after_initialize
+
 - `recipe/sidekiq.rb` - Sidekiq setup with AppConfig
 - `recipe/redis.rb` - Redis configuration
 - `recipe/sentry.rb` - Sentry error tracking
 
 ### Pattern 3: Generator Execution
+
 - `recipe/rspec.rb` - RSpec installation
 - `recipe/pundit.rb` - Pundit authorization
 - `recipe/action_storage.rb` - Active Storage setup
 
 ### Pattern 4: Delayed Initializer
+
 - `recipe/pagy.rb` - Pagination with gem requires
 
 ### Pattern 5: Hybrid
+
 - `recipe/sidekiq.rb` - Config file + initializer
 
 ## Best Practices
@@ -497,6 +513,7 @@ docker compose up -d             # Test Docker setup
 ### Automated Testing
 
 Create a test script (see `tmp/test_template.sh`) to verify:
+
 - Template executes without errors
 - All initializers are created
 - Generators complete successfully
@@ -517,4 +534,4 @@ When adding or modifying recipes:
 - Main template: `template/api.rb`
 - Helper methods: `lib/base.rb`
 - Recipe directory: `recipe/`
-- Rails template guide: https://guides.rubyonrails.org/rails_application_templates.html
+- Rails template guide: <https://guides.rubyonrails.org/rails_application_templates.html>
